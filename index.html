@@ -67,6 +67,12 @@
   tfoot td{padding:9px;font-weight:700;border-top:2px solid var(--maroon)}
   tfoot td.num{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:19px;color:var(--maroon)}
 
+  /* 窄視窗時表格橫向捲動,不擠壓欄位 */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -2px;padding:0 2px}
+  .tbl-scroll>table{min-width:760px}
+  .tbl-scroll>#tblStress{min-width:660px}
+  .tbl-scroll>#tblPnl{min-width:480px}
+
   input,select{font-family:inherit;font-size:17px;color:var(--ink);background:var(--field);border:1px solid var(--line-strong);border-radius:7px;padding:5px 8px;width:100%;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
   input:focus,select:focus{outline:none;border-color:var(--maroon);box-shadow:0 0 0 3px rgba(46,58,77,.18);background:var(--field-focus)}
   input.t-num{text-align:right} input.t-pct{text-align:center;max-width:78px}
@@ -149,9 +155,26 @@
 
   footer{margin-top:30px;text-align:center;font-size:14px;color:var(--ink-soft);letter-spacing:.04em}
 
+  /* 中間段:筆電 / 分割視窗 */
+  @media(max-width:1024px){
+    body{padding:32px 18px 64px}
+    .kpis{grid-template-columns:repeat(2,1fr);gap:14px}
+    .kpi .val{font-size:38px}
+    .brand h1{font-size:36px}
+    .panel{padding:24px 24px 26px}
+  }
   @media(max-width:720px){
-    .kpis{grid-template-columns:repeat(2,1fr)} .brand h1{font-size:27.5px}
+    body{padding:26px 14px 56px}
+    .brand h1{font-size:27.5px}
+    .kpi .val{font-size:33px}
     .masthead .meta{text-align:left} thead th{font-size:12.5px;padding:6px 5px} tbody td{padding:5px 5px}
+    .panel{padding:20px 16px 22px}
+    .panel-head .hint{display:none}
+    .tol .big{font-size:40px}
+  }
+  @media(max-width:460px){
+    .kpis{grid-template-columns:1fr}
+    .kpi .val{font-size:36px}
   }
   @media print{body{background:#fff;padding:0}.toolbar,.addrow,.del{display:none!important}.panel{box-shadow:none;break-inside:avoid}}
 
@@ -212,7 +235,14 @@
   .snap-actions{display:flex;gap:10px;margin-bottom:18px}
   .snap-actions button{font-family:inherit;font-size:15.5px;font-weight:500;padding:8px 16px;border-radius:9px;cursor:pointer;border:1px solid var(--line-strong);background:var(--paper-2);color:var(--ink);transition:.15s}
   .snap-actions button:hover{border-color:var(--maroon);color:var(--maroon)}
-  @media(max-width:760px){.pnl-grid{grid-template-columns:1fr}.snap-chips{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:760px){
+    .pnl-grid{grid-template-columns:1fr}
+    .snap-chips{grid-template-columns:repeat(2,1fr)}
+    .snap-head{padding:26px 22px 24px}
+    .snap-head .tag{position:static;text-align:left;margin-top:14px}
+    .snap-head h1{font-size:26px}
+    .snap-sectitle .en{display:none}
+  }
   @media print{.viewtabs,.snap-actions,.case-bar{display:none!important}}
 
   /* ===== 個案管理 ===== */
@@ -335,19 +365,19 @@
 
   <section class="panel">
     <div class="panel-head"><span class="idx">1</span><h2>資產配置<span class="en">Collateral Portfolio</span></h2><span class="hint">押進銀行的資產 · 配息率供損益層使用</span></div>
-    <table id="tblCol"><thead><tr>
+    <div class="tbl-scroll"><table id="tblCol"><thead><tr>
       <th>資產 / 標的</th><th>類別</th><th class="num">市值 (USD)</th><th class="num">LTV %</th><th class="num">配息/收益率 %</th><th class="num">釋放額度</th><th style="text-align:center;font-size:13px">保管費</th><th></th>
     </tr></thead><tbody></tbody>
-    <tfoot><tr><td colspan="2">抵押總釋放額度</td><td class="num" id="colMv">0</td><td></td><td></td><td class="num" id="colCap">0</td><td></td></tr></tfoot></table>
+    <tfoot><tr><td colspan="2">抵押總釋放額度</td><td class="num" id="colMv">0</td><td></td><td></td><td class="num" id="colCap">0</td><td></td></tr></tfoot></table></div>
     <button class="addrow" data-add="col">＋ 新增抵押資產</button>
   </section>
 
   <section class="panel">
     <div class="panel-head"><span class="idx">2</span><h2>資金運用<span class="en">Capital Deployment</span></h2><span class="hint">回押開 → 淨佔用 金額×(1−回押LTV)</span></div>
-    <table id="tblUse"><thead><tr>
+    <div class="tbl-scroll"><table id="tblUse"><thead><tr>
       <th>用途 / 標的</th><th class="num">金額 (USD)</th><th class="num" style="text-align:center">回押 &amp; LTV%</th><th class="num">配息/收益率 %</th><th class="num">佔用額度</th><th class="num">剩餘金額</th><th style="text-align:center;font-size:13px">保管費</th><th></th>
     </tr></thead><tbody></tbody>
-    <tfoot><tr><td>動用合計</td><td class="num" id="useAmt">0</td><td></td><td></td><td class="num" id="useOcc">0</td><td class="num" id="useRem">0</td><td></td></tr></tfoot></table>
+    <tfoot><tr><td>動用合計</td><td class="num" id="useAmt">0</td><td></td><td></td><td class="num" id="useOcc">0</td><td class="num" id="useRem">0</td><td></td></tr></tfoot></table></div>
     <button class="addrow" data-add="use">＋ 新增配置動用</button>
     <div class="note"><b>回押 (Re-pledge)</b>:開啟＝買入後回押給同一額度,只淨佔用 <code>金額×(1−回押LTV)</code>(債券、SN);關閉＝純現金支出全額佔用(保單頭期款)。<b>收益率</b>供損益層算年收益;保單頭期款年收益填 0(其價值在保單 IRR,不在此年度 carry)。</div>
   </section>
@@ -389,9 +419,9 @@
         <input class="t-num" id="ownFunds" placeholder="自動 = 抵押品總市值">
       </label>
     </div>
-    <table id="tblPnl"><thead><tr>
+    <div class="tbl-scroll"><table id="tblPnl"><thead><tr>
       <th>項目</th><th class="num">金額 (USD)</th><th class="num">年化率 %</th><th class="num">年度金額</th>
-    </tr></thead><tbody></tbody></table>
+    </tr></thead><tbody></tbody></table></div>
     <div class="pnl-result">
       <div><div class="l">年度總收益</div><div class="v g" id="pIncome">$0</div></div>
       <div><div class="l">融資成本 + 費用</div><div class="v r" id="pCost">$0</div></div>
@@ -419,10 +449,10 @@
       </div>
     </div>
 
-    <table id="tblStress"><thead><tr>
+    <div class="tbl-scroll"><table id="tblStress"><thead><tr>
       <th>抵押標的</th><th class="num">現值 (USD)</th><th class="num">LTV%</th><th style="text-align:center">模擬跌幅</th><th class="num">壓力後抵押值</th><th class="num">單獨觸發門檻</th>
     </tr></thead><tbody></tbody>
-    <tfoot><tr><td>壓力後總抵押值</td><td class="num" id="sMv">0</td><td></td><td></td><td class="num" id="sTlv">0</td><td></td></tr></tfoot></table>
+    <tfoot><tr><td>壓力後總抵押值</td><td class="num" id="sMv">0</td><td></td><td></td><td class="num" id="sTlv">0</td><td></td></tr></tfoot></table></div>
 
     <div class="stress-result">
       <div><div class="l">壓力後總抵押值</div><div class="v" id="rTlv">$0</div></div>
@@ -1148,7 +1178,7 @@ body{font-family:'Libre Franklin','Noto Sans TC',sans-serif;color:var(--ink);bac
 .snap-explain p{font-size:16px;color:var(--ink);line-height:1.75;margin:0}
 .snap-explain b{color:#252f3f;font-weight:700}
 footer{margin-top:36px;text-align:center;font-size:13px;color:var(--ink-soft);letter-spacing:.04em;border-top:1px solid var(--line);padding-top:16px}
-@media(max-width:700px){.pnl-grid{grid-template-columns:1fr}.snap-chips{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.pnl-grid{grid-template-columns:1fr}.snap-chips{grid-template-columns:repeat(2,1fr)}.snap-head{padding:26px 22px 24px}.snap-head .tag{position:static;text-align:left;margin-top:14px}.snap-head h1{font-size:26px}.snap-sectitle .en{display:none}body{padding:24px 14px 48px}}
 @media print{.print-btn{display:none!important}}
 </style>
 </head>
