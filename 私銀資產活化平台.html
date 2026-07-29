@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>私銀資產活化平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --ink:#222a36; --ink-soft:#7e8694;
+    --paper:#eef0f2; --paper-2:#fbfbfc;
+    --line:#dde0e4; --line-strong:#c7ccd3;
+    --maroon:#2e3a4d; --maroon-deep:#252f3f; --maroon-soft:#5a6577;
+    --gold:#b08833; --green:#3f7a57; --green-soft:#e6f0e8;
+    --red:#b3473c; --red-soft:#f6e6e3; --amber:#a87f2e; --amber-soft:#f4ecd9;
+    --shadow:0 1px 2px rgba(34,42,54,.06),0 18px 50px -28px rgba(34,42,54,.30);
+    --field:#fbfbfc; --field-focus:#fff;
+    --navy:#2e3a4d; /* deep accent used in charts/funnel bands */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Libre Franklin','Noto Sans TC',sans-serif;color:var(--ink);font-size:18px;
+    background:radial-gradient(130% 90% at 100% 0%,rgba(46,58,77,.10),transparent 58%),radial-gradient(110% 80% at 0% 100%,rgba(176,136,51,.08),transparent 55%),var(--paper);
+    line-height:1.55;padding:40px 22px 80px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px;margin:0 auto}
+
+  header.masthead{border-bottom:1px solid var(--maroon);padding-bottom:26px;margin-bottom:36px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;gap:6px}
+  .brand .eyebrow{font-family:'Libre Franklin',sans-serif;letter-spacing:.32em;text-transform:uppercase;font-size:13px;color:var(--maroon-soft);font-weight:600}
+  .brand h1{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:600;font-size:45.5px;letter-spacing:.01em;line-height:1.12;color:var(--ink)}
+  .brand h1 small{display:block;font-family:'Libre Franklin',sans-serif;font-size:15.5px;color:var(--maroon-soft);font-weight:500;letter-spacing:.14em;text-transform:uppercase;margin-top:5px}
+  .masthead .meta{text-align:right;font-size:14.5px;color:var(--ink-soft);line-height:1.9;letter-spacing:.03em}
+  .masthead .meta b{color:var(--maroon);font-weight:600}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:36px}
+  .kpi{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:22px 22px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line-strong)}
+  .kpi.k-cap::before{background:var(--maroon)} .kpi.k-used::before{background:var(--gold)}
+  .kpi.k-free::before{background:var(--green)} .kpi.k-util::before{background:var(--maroon-soft)}
+  .kpi .lab{font-size:14px;color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .kpi .val{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:600;font-size:43px;letter-spacing:0;line-height:1;color:var(--ink)}
+  .kpi .val .cur{font-size:19px;color:var(--ink-soft);font-weight:500;margin-right:3px}
+  .kpi .sub{font-size:14px;color:var(--ink-soft);margin-top:8px;letter-spacing:.02em}
+  .kpi.k-free.neg .val{color:var(--red)} .kpi.k-free.pos .val{color:var(--green)}
+
+  .panel{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:30px 32px 32px;margin-bottom:28px;box-shadow:var(--shadow)}
+  .panel-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .panel-head .idx{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:600;font-size:19px;width:26px;height:26px;border:1.5px solid var(--maroon);color:var(--maroon);border-radius:50%;display:grid;place-items:center;flex:none}
+  .panel-head h2{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:23px;display:flex;flex-direction:column;gap:2px;line-height:1.1}
+  .panel-head h2 .en{font-family:'Libre Franklin',sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--maroon-soft)}
+  .panel-head .hint{margin-left:auto;font-size:14.5px;color:var(--ink-soft)}
+
+  #waterfall{width:100%;height:230px;display:block}
+  .wf-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;font-size:14.5px;color:var(--ink-soft)}
+  .wf-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+  table{width:100%;border-collapse:collapse;font-size:17.5px}
+  thead th{text-align:left;font-weight:500;font-size:14px;letter-spacing:.07em;color:var(--maroon);text-transform:uppercase;padding:6px 9px;border-bottom:1.5px solid var(--line-strong);white-space:nowrap}
+  thead th.num{text-align:right}
+  tbody td{padding:5px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tbody tr:hover{background:rgba(46,58,77,.06)}
+  td.num,th.num{text-align:right}
+  .out{font-weight:600;color:var(--maroon-deep)} .out.occ{color:var(--gold)} .out.inc{color:var(--green)} .out.cost{color:var(--red)}
+  tfoot td{padding:9px;font-weight:700;border-top:2px solid var(--maroon)}
+  tfoot td.num{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:19px;color:var(--maroon)}
+
+  input,select{font-family:inherit;font-size:17px;color:var(--ink);background:var(--field);border:1px solid var(--line-strong);border-radius:7px;padding:5px 8px;width:100%;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus{outline:none;border-color:var(--maroon);box-shadow:0 0 0 3px rgba(46,58,77,.18);background:var(--field-focus)}
+  input.t-num{text-align:right} input.t-pct{text-align:center;max-width:78px}
+  select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='8' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l4 6 4-6z' fill='%232e3a4d'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:24px}
+  .del{border:none;background:none;color:var(--maroon-soft);cursor:pointer;font-size:23px;line-height:1;padding:2px 6px;border-radius:6px;transition:.15s}
+  .del:hover{background:var(--red-soft);color:var(--red)}
+  .addrow{margin-top:11px;border:1.4px dashed var(--line-strong);background:none;color:var(--maroon);font-family:inherit;font-weight:500;font-size:15.5px;padding:8px 14px;border-radius:9px;cursor:pointer;transition:.15s;letter-spacing:.03em}
+  .addrow:hover{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+
+  .pb-wrap{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .sw{position:relative;width:44px;height:26px;flex:none;cursor:pointer}
+  .sw input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;min-width:unset}
+  .sw .track{position:absolute;inset:0;background:#d8cdbb;border-radius:13px;transition:.25s}
+  .sw .knob{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(80,50,20,.25)}
+  .sw input:checked ~ .track{background:#3f7a57}
+  .sw input:checked ~ .knob{transform:translateX(18px)}
+  .sw.sm{width:44px;height:26px}
+  .sw.sm .track{border-radius:13px}
+  .sw.sm .knob{width:20px;height:20px;top:3px;left:3px}
+  .sw.sm input:checked ~ .knob{transform:translateX(18px)}
+  .pb-wrap input.t-pct:disabled{opacity:.32;background:var(--paper)}
+
+  .note{font-size:15px;color:var(--ink-soft);margin-top:14px;line-height:1.7;border-top:1px dashed var(--line);padding-top:12px}
+  .note b{color:var(--maroon)}
+  code{background:#efe7d8;padding:1px 6px;border-radius:5px;font-size:15px;color:var(--maroon-deep);font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:600}
+
+  /* config grid */
+  .cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
+  .cfg label{display:flex;flex-direction:column;gap:5px;font-size:14.5px;color:var(--ink-soft);letter-spacing:.04em}
+
+  /* P&L result */
+  .pnl-result{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;margin-top:16px;border:1px solid var(--line-strong);border-radius:11px;overflow:hidden}
+  .pnl-result>div{padding:13px 16px;border-right:1px solid var(--line)}
+  .pnl-result>div:last-child{border-right:none}
+  .pnl-result .l{font-size:14px;color:var(--ink-soft);margin-bottom:5px}
+  .pnl-result .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:27.5px}
+  .pnl-result .v.g{color:var(--green)} .pnl-result .v.r{color:var(--red)} .pnl-result .v.m{color:var(--maroon)}
+  .pnl-result .v small{font-size:15px;color:var(--ink-soft);font-weight:500}
+
+  /* stress */
+  .stress-top{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:18px}
+  @media(max-width:720px){.stress-top{grid-template-columns:1fr}}
+  .scenario{border:1px solid var(--line-strong);border-radius:12px;padding:15px 16px;background:#e9ebee}
+  .scenario h3{font-size:15px;color:var(--ink-soft);letter-spacing:.05em;margin-bottom:12px;font-weight:500}
+  .master-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .master-row .ml{font-size:15px;color:var(--ink);width:120px;flex:none}
+  .master-row output{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:20.5px;color:var(--maroon);width:54px;text-align:right;flex:none}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--red));outline:none;padding:0;border:none;width:100%}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--maroon);border:2.5px solid var(--paper-2);cursor:pointer;box-shadow:0 1px 3px rgba(80,50,20,.25)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--maroon);border:2.5px solid var(--paper-2);cursor:pointer}
+  .tol{border:1px solid var(--line-strong);border-radius:12px;padding:15px 16px;background:linear-gradient(160deg,#e9ebee,var(--paper-2))}
+  .tol h3{font-size:15px;color:var(--ink-soft);letter-spacing:.05em;margin-bottom:6px;font-weight:500}
+  .tol .big{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:50.5px;line-height:1;color:var(--maroon)}
+  .tol .big small{font-size:19px;color:var(--ink-soft);font-weight:500}
+  .tol p{font-size:14.5px;color:var(--ink-soft);margin-top:8px;line-height:1.6}
+
+  .badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:15px;font-weight:700;letter-spacing:.03em}
+  .badge.safe{background:var(--green-soft);color:var(--green)}
+  .badge.warn{background:var(--amber-soft);color:var(--amber)}
+  .badge.call{background:var(--red-soft);color:var(--red)}
+
+  .stress-result{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;margin-top:16px;border:1px solid var(--line-strong);border-radius:11px;overflow:hidden}
+  .stress-result>div{padding:13px 15px;border-right:1px solid var(--line)}
+  .stress-result>div:last-child{border-right:none}
+  .stress-result .l{font-size:14px;color:var(--ink-soft);margin-bottom:5px}
+  .stress-result .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:26.5px}
+  .stress-result .v.g{color:var(--green)} .stress-result .v.r{color:var(--red)} .stress-result .v.a{color:var(--amber)}
+
+  .srange{display:flex;align-items:center;gap:9px;min-width:150px}
+  .srange input[type=range]{flex:1}
+  .srange .pv{font-weight:700;color:var(--maroon);width:42px;text-align:right;font-size:15.5px;flex:none}
+  .thr{font-weight:700}
+  .thr.tight{color:var(--red)} .thr.mid{color:var(--amber)} .thr.ok{color:var(--green)}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+  .toolbar button{font-family:inherit;font-size:15.5px;font-weight:500;padding:8px 16px;border-radius:9px;cursor:pointer;border:1px solid var(--line-strong);background:var(--paper-2);color:var(--ink);transition:.15s;letter-spacing:.02em}
+  .toolbar button:hover{border-color:var(--maroon);color:var(--maroon)}
+  .toolbar button.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .toolbar button.primary:hover{background:var(--maroon-deep)}
+
+  footer{margin-top:30px;text-align:center;font-size:14px;color:var(--ink-soft);letter-spacing:.04em}
+
+  @media(max-width:720px){
+    .kpis{grid-template-columns:repeat(2,1fr)} .brand h1{font-size:27.5px}
+    .masthead .meta{text-align:left} thead th{font-size:12.5px;padding:6px 5px} tbody td{padding:5px 5px}
+  }
+  @media print{body{background:#fff;padding:0}.toolbar,.addrow,.del{display:none!important}.panel{box-shadow:none;break-inside:avoid}}
+
+  /* ===== view tabs + linked snapshot ===== */
+  .viewtabs{display:flex;gap:8px;margin-bottom:18px}
+  .viewtabs button{font-family:inherit;font-size:17px;font-weight:600;padding:9px 20px;border-radius:10px 10px 0 0;cursor:pointer;border:1px solid var(--line-strong);border-bottom:none;background:var(--paper);color:var(--ink-soft);transition:.15s;letter-spacing:.04em}
+  .viewtabs button.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .viewtabs button:not(.active):hover{color:var(--maroon)}
+  #snapView{display:none}
+  body.snap #editView{display:none}
+  body.snap #snapView{display:block}
+
+  .snap-head{background:linear-gradient(135deg,#fbfbfc,#e6e9ed);color:var(--ink);padding:34px 40px 30px;border-radius:16px;position:relative;overflow:hidden;margin-bottom:30px;border:1px solid var(--line);border-top:2px solid var(--maroon)}
+  .snap-head::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border:1px solid rgba(46,58,77,.18);border-radius:50%}
+  .snap-head .eyebrow{font-family:'Source Serif 4','Noto Serif TC',serif;letter-spacing:.44em;text-transform:uppercase;font-size:14px;color:var(--maroon);font-weight:600;margin-bottom:7px}
+  .snap-head h1{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:32.5px;line-height:1.15}
+  .snap-head .sub{font-size:15.5px;color:var(--ink-soft);margin-top:7px}
+  .snap-head .tag{position:absolute;right:30px;bottom:22px;text-align:right;font-size:14px;color:var(--ink-soft);line-height:1.7}
+  .snap-head .tag b{color:var(--maroon);font-weight:700}
+
+  .snap-sec{margin-bottom:30px}
+  .snap-sectitle{display:flex;align-items:baseline;gap:11px;margin-bottom:5px}
+  .snap-sectitle .n{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:29px;font-weight:700;color:var(--maroon-soft);line-height:1}
+  .snap-sectitle h2{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:25px}
+  .snap-sectitle .en{font-family:'Source Serif 4','Noto Serif TC',serif;letter-spacing:.16em;text-transform:uppercase;font-size:14px;color:var(--ink-soft);margin-left:auto}
+  .snap-rule{height:2px;background:linear-gradient(90deg,var(--maroon),transparent);margin:7px 0 20px;border-radius:2px}
+
+  .funnel-wrap{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;padding:14px 10px 6px}
+  #snapFunnel{width:100%;height:auto;display:block}
+  .fcaption{text-align:center;font-size:19px;color:var(--ink-soft);margin:6px 0 12px}
+  .snap-chips{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+  .snap-chips>div{padding:13px 14px;border-right:1px solid var(--line);text-align:center}
+  .snap-chips>div:last-child{border-right:none}
+  .snap-chips .l{font-size:14px;color:var(--ink-soft);margin-bottom:5px} .snap-chips .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:27.5px;line-height:1}
+  .snap-chips .v.m{color:var(--maroon)} .snap-chips .v.g{color:var(--gold)} .snap-chips .v.gr{color:var(--green)} .snap-chips .v.r{color:var(--red)}
+
+  .pnl-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+  .ledger{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .ledger table{width:100%;border-collapse:collapse;font-size:17.5px}
+  .ledger th{text-align:left;font-weight:500;font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--maroon);padding:11px 16px 7px;border-bottom:1.5px solid var(--line-strong)}
+  .ledger th.num,.ledger td.num{text-align:right}
+  .ledger td{padding:7px 16px;border-bottom:1px solid var(--line)}
+  .ledger .grp td{background:rgba(176,136,51,.10);font-weight:600;font-size:14.5px;color:var(--maroon);letter-spacing:.03em}
+  .ledger .inc td.num{color:var(--green);font-weight:600} .ledger .cost td.num{color:var(--red);font-weight:600}
+  .ledger .sub td{font-weight:700;border-top:1.5px solid var(--line-strong)} .ledger .sub td.num{font-family:'Source Serif 4','Noto Serif TC',serif}
+  .ledger .net td{background:var(--maroon);color:#fff;font-weight:700;font-size:17px} .ledger .net td.num{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:23px;color:#fff}
+  .ledger .meta{font-size:14px;color:var(--ink-soft)}
+  .snap-stats{display:flex;flex-direction:column;gap:13px}
+  .snap-stat{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;padding:15px 17px;position:relative;overflow:hidden}
+  .snap-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .snap-stat.s1::before{background:var(--maroon)} .snap-stat.s2::before{background:var(--gold)} .snap-stat.s3::before{background:var(--green)}
+  .snap-stat .l{font-size:14.5px;color:var(--ink-soft);margin-bottom:5px} .snap-stat .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:900;font-size:33.5px;line-height:1}
+  .snap-stat.s1 .v{color:var(--maroon)} .snap-stat.s2 .v{color:var(--gold)} .snap-stat.s3 .v{color:var(--green)}
+  .snap-stat .v .u{font-size:17px;font-weight:600;color:var(--ink-soft)} .snap-stat .s{font-size:14px;color:var(--ink-soft);margin-top:5px}
+  .snap-explain{margin-top:16px;padding:16px 20px;background:var(--paper-2);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:8px}
+  .snap-explain p{font-size:17.5px;color:var(--ink);line-height:1.75;margin:0}
+  .snap-explain b{color:var(--maroon-deep);font-weight:700} .snap-foot b{color:var(--maroon)}
+  .snap-actions{display:flex;gap:10px;margin-bottom:18px}
+  .snap-actions button{font-family:inherit;font-size:15.5px;font-weight:500;padding:8px 16px;border-radius:9px;cursor:pointer;border:1px solid var(--line-strong);background:var(--paper-2);color:var(--ink);transition:.15s}
+  .snap-actions button:hover{border-color:var(--maroon);color:var(--maroon)}
+  @media(max-width:760px){.pnl-grid{grid-template-columns:1fr}.snap-chips{grid-template-columns:repeat(2,1fr)}}
+  @media print{.viewtabs,.snap-actions,.case-bar{display:none!important}}
+
+  /* ===== 個案管理 ===== */
+  .case-bar{background:var(--paper-2);border:1px solid var(--line-strong);border-radius:14px;padding:14px 18px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+  .case-bar-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .case-bar-top .cb-label{font-family:'Source Serif 4','Noto Serif TC',serif;letter-spacing:.3em;text-transform:uppercase;font-size:14.5px;color:var(--maroon-soft);font-weight:600;white-space:nowrap}
+  .case-list{display:flex;gap:7px;flex-wrap:wrap;flex:1;min-width:0}
+  .case-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px 5px 13px;border-radius:20px;border:1.5px solid var(--line-strong);background:var(--paper);font-size:15px;font-weight:500;cursor:pointer;transition:.15s;max-width:230px;white-space:nowrap;overflow:hidden}
+  .case-chip .cname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .case-chip:hover{border-color:var(--maroon);color:var(--maroon)}
+  .case-chip.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .case-chip .cdel{margin-left:3px;opacity:.5;font-size:17px;line-height:1;padding:0 2px;flex-none}
+  .case-chip .cedit{margin-left:4px;opacity:.45;font-size:14px;line-height:1;padding:0 2px;flex-none}
+  .case-chip:not(.active) .cedit:hover{opacity:1;color:var(--gold)}
+  .case-chip.active .cedit{opacity:.7}.case-chip.active .cedit:hover{opacity:1}
+  .case-chip:not(.active) .cdel:hover{opacity:1;color:var(--red)}
+  .case-chip.active .cdel{opacity:.7} .case-chip.active .cdel:hover{opacity:1}
+  .case-actions{display:flex;gap:7px;flex-wrap:wrap}
+  .case-actions button{font-family:inherit;font-size:15px;font-weight:500;padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--line-strong);background:var(--paper-2);color:var(--ink);transition:.15s;white-space:nowrap}
+  .case-actions button:hover{border-color:var(--maroon);color:var(--maroon)}
+  .case-actions button.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .case-actions button.primary:hover{background:var(--maroon-deep)}
+  .case-actions button.accent{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .case-actions button.accent:hover{background:#8a6e34}
+  .case-empty{font-size:15px;color:var(--ink-soft);font-style:italic}
+
+  /* 儲存 modal */
+  .cm-overlay{position:fixed;inset:0;background:rgba(60,40,20,.32);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(2px)}
+  .cm-dialog{background:var(--paper-2);border:1px solid var(--line-strong);border-radius:18px;padding:28px 30px 24px;width:min(420px,90vw);box-shadow:0 20px 60px -10px rgba(80,50,20,.35)}
+  .cm-dialog h3{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:21.5px;margin-bottom:16px;color:var(--maroon-deep)}
+  .cm-dialog label{display:flex;flex-direction:column;gap:5px;font-size:15px;color:var(--ink-soft);letter-spacing:.04em;margin-bottom:13px}
+  .cm-dialog input,.cm-dialog textarea{font-family:inherit;font-size:17.5px;color:var(--ink);background:var(--field);border:1px solid var(--line-strong);border-radius:8px;padding:8px 11px;width:100%;transition:border-color .15s,box-shadow .15s}
+  .cm-dialog textarea{resize:vertical;min-height:72px;line-height:1.5}
+  .cm-dialog input:focus,.cm-dialog textarea:focus{outline:none;border-color:var(--maroon);box-shadow:0 0 0 3px rgba(46,58,77,.18)}
+  .cm-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+  .cm-btns button{font-family:inherit;font-size:17px;font-weight:500;padding:8px 20px;border-radius:9px;cursor:pointer;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);transition:.15s}
+  .cm-btns button.primary{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .cm-btns button:hover:not(.primary){border-color:var(--maroon);color:var(--maroon)}
+  .cm-btns button.primary:hover{background:var(--maroon-deep)}
+  .cm-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--maroon);color:#fff;padding:10px 24px;border-radius:30px;font-size:17px;font-weight:500;letter-spacing:.03em;z-index:99999;opacity:0;transition:opacity .25s;pointer-events:none}
+  .cm-toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="brand">
+      <span class="eyebrow">Private Wealth · Asset Mobilisation</span>
+      <div>
+        <h1>私銀資產活化平台 <small>Collateral &amp; Leverage Platform</small></h1>
+      </div>
+    </div>
+    <div class="meta">資產活化 · 抵押額度 → 淨利差 → Margin Call 推演<br>幣別 <b>USD</b> ｜ 內部演示 Internal Demo ｜ <span id="stamp"></span></div>
+  </header>
+
+  <div class="case-bar" id="caseBar">
+    <div class="case-bar-top">
+      <span class="cb-label">個案管理</span>
+      <div class="case-list" id="caseList"><span class="case-empty">尚無儲存個案</span></div>
+      <div class="case-actions" style="flex-direction:row;align-items:flex-start;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <div style="display:flex;flex-direction:column;gap:7px;align-items:stretch">
+          <button id="btnNewCase" class="primary">＋ 新個案</button>
+          <button id="btnSaveCase" class="accent">💾 儲存</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <button id="btnExportCase">⬇ 匯出 JSON</button>
+          <button id="btnImportCase">⬆ 匯入 JSON</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <button data-preset="blank">🗑 清空重來</button>
+          <button onclick="window.print()">🖨 列印 / 存 PDF</button>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
+    </div>
+    <div id="caseCurrentLabel" style="font-size:14px;color:var(--ink-soft)">目前未載入任何個案 · 所有變更不會自動儲存</div>
+  </div>
+
+  <!-- 儲存 modal -->
+  <div class="cm-overlay" id="cmOverlay" style="display:none">
+    <div class="cm-dialog">
+      <h3 id="cmTitle">儲存個案</h3>
+      <label>客戶姓名 / 個案名稱
+        <input id="cmName" placeholder="例：王小明 家族配置方案" maxlength="40">
+      </label>
+      <label>備註 (選填)
+        <textarea id="cmNote" placeholder="例：2025年 Q3 提案、CHF 1.35% 方案…"></textarea>
+      </label>
+      <input type="hidden" id="cmMode" value="new">
+      <div class="cm-btns">
+        <button id="cmCancel">取消</button>
+        <button class="primary" id="cmConfirm">確認儲存</button>
+      </div>
+    </div>
+  </div>
+  <div class="cm-toast" id="cmToast"></div>
+
+  <div class="viewtabs">
+    <button id="tabEdit" class="active">編輯計算</button>
+    <button id="tabSnap">簡報快照</button>
+  </div>
+
+  <div id="editView">
+
+  <section class="kpis">
+    <div class="kpi k-cap"><div class="lab">總資產 Total Assets</div><div class="val"><span class="cur">$</span><span id="kCap">0</span></div><div class="sub">Σ 抵押品市值</div></div>
+    <div class="kpi k-used"><div class="lab">抵押後總資產 Leveraged</div><div class="val"><span class="cur">$</span><span id="kUsed">0</span></div><div class="sub">總資產 + 借入資金</div></div>
+    <div class="kpi k-free"><div class="lab">剩餘 / 緩衝 Headroom</div><div class="val"><span class="cur">$</span><span id="kFree">0</span></div><div class="sub" id="kFreeSub">尚可動用</div></div>
+    <div class="kpi k-util"><div class="lab">利用率 Utilisation</div><div class="val"><span id="kUtil">0</span><span class="cur" style="margin:0 0 0 2px">%</span></div><div class="sub" id="kUtilSub">建議 ≤ 85%</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><span class="idx">＝</span><h2>資金結構<span class="en">Capital Structure</span></h2></div>
+    <div style="padding:4px 0 8px">
+      <div id="deployLegendEdit" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:14.5px;color:var(--ink-soft)"></div>
+      <div style="position:relative;width:100%;height:180px"><canvas id="waterfallChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><span class="idx">1</span><h2>資產配置<span class="en">Collateral Portfolio</span></h2><span class="hint">押進銀行的資產 · 配息率供損益層使用</span></div>
+    <table id="tblCol"><thead><tr>
+      <th>資產 / 標的</th><th>類別</th><th class="num">市值 (USD)</th><th class="num">LTV %</th><th class="num">配息/收益率 %</th><th class="num">釋放額度</th><th style="text-align:center;font-size:13px">保管費</th><th></th>
+    </tr></thead><tbody></tbody>
+    <tfoot><tr><td colspan="2">抵押總釋放額度</td><td class="num" id="colMv">0</td><td></td><td></td><td class="num" id="colCap">0</td><td></td></tr></tfoot></table>
+    <button class="addrow" data-add="col">＋ 新增抵押資產</button>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><span class="idx">2</span><h2>資金運用<span class="en">Capital Deployment</span></h2><span class="hint">回押開 → 淨佔用 金額×(1−回押LTV)</span></div>
+    <table id="tblUse"><thead><tr>
+      <th>用途 / 標的</th><th class="num">金額 (USD)</th><th class="num" style="text-align:center">回押 &amp; LTV%</th><th class="num">配息/收益率 %</th><th class="num">佔用額度</th><th class="num">剩餘金額</th><th style="text-align:center;font-size:13px">保管費</th><th></th>
+    </tr></thead><tbody></tbody>
+    <tfoot><tr><td>動用合計</td><td class="num" id="useAmt">0</td><td></td><td></td><td class="num" id="useOcc">0</td><td class="num" id="useRem">0</td><td></td></tr></tfoot></table>
+    <button class="addrow" data-add="use">＋ 新增配置動用</button>
+    <div class="note"><b>回押 (Re-pledge)</b>:開啟＝買入後回押給同一額度,只淨佔用 <code>金額×(1−回押LTV)</code>(債券、SN);關閉＝純現金支出全額佔用(保單頭期款)。<b>收益率</b>供損益層算年收益;保單頭期款年收益填 0(其價值在保單 IRR,不在此年度 carry)。</div>
+  </section>
+
+  <!-- ===== Block 3: P&L ===== -->
+  <section class="panel">
+    <div class="panel-head"><span class="idx">3</span><h2>損益試算<span class="en">Profit &amp; Loss</span></h2><span class="hint">收益 − 融資成本 − 費用</span></div>
+    <!-- 多幣別借貸 -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:15.5px;font-weight:600;color:var(--maroon)">借貸明細 <span style="font-size:13px;font-weight:400;color:var(--ink-soft)">· 借款金額預設帶入動用合計，手動修改後即固定</span></span>
+        <button id="btnAddLoan" style="font-size:14.5px;padding:4px 12px;border-radius:6px;border:1px solid var(--maroon);background:none;color:var(--maroon);cursor:pointer">＋ 新增借貸</button>
+      </div>
+      <table id="tblLoans" style="width:100%;border-collapse:collapse;font-size:15.5px">
+        <thead><tr>
+          <th style="text-align:left;padding:5px 8px;border-bottom:1.5px solid var(--line-strong);font-size:13px;color:var(--maroon)">幣別</th>
+          <th style="text-align:right;padding:5px 8px;border-bottom:1.5px solid var(--line-strong);font-size:13px;color:var(--maroon)">借款金額 (USD)</th>
+          <th style="text-align:right;padding:5px 8px;border-bottom:1.5px solid var(--line-strong);font-size:13px;color:var(--maroon)">利率 % (年)</th>
+          <th style="text-align:right;padding:5px 8px;border-bottom:1.5px solid var(--line-strong);font-size:13px;color:var(--maroon)">兌 USD 匯率 (參考)</th>
+          <th style="text-align:right;padding:5px 8px;border-bottom:1.5px solid var(--line-strong);font-size:13px;color:var(--maroon)">利息 (USD)</th>
+          <th style="padding:5px 4px;border-bottom:1.5px solid var(--line-strong)"></th>
+        </tr></thead>
+        <tbody id="loanRows"></tbody>
+        <tfoot><tr>
+          <td colspan="4" style="padding:6px 8px;font-weight:600;font-size:14.5px;color:var(--ink-soft)">合計借款 (USD)</td>
+          <td style="text-align:right;padding:6px 8px;font-weight:700;color:var(--maroon)" id="loanTotalUsd">$0</td>
+          <td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="cfg">
+      <label>保管費率 % (年)
+        <input class="t-num" id="custodyRate" value="0.15">
+      </label>
+      <label style="pointer-events:none;opacity:.7">保管費計費基礎 (自動)
+        <input class="t-num" id="custodyBase" placeholder="依勾選商品自動計算" readonly style="background:var(--paper);cursor:default">
+      </label>
+      <label>自備金 (USD) · 可手動覆寫
+        <input class="t-num" id="ownFunds" placeholder="自動 = 抵押品總市值">
+      </label>
+    </div>
+    <table id="tblPnl"><thead><tr>
+      <th>項目</th><th class="num">金額 (USD)</th><th class="num">年化率 %</th><th class="num">年度金額</th>
+    </tr></thead><tbody></tbody></table>
+    <div class="pnl-result">
+      <div><div class="l">年度總收益</div><div class="v g" id="pIncome">$0</div></div>
+      <div><div class="l">融資成本 + 費用</div><div class="v r" id="pCost">$0</div></div>
+      <div><div class="l">淨年度回報</div><div class="v m" id="pNet">$0</div></div>
+      <div><div class="l">自備金年化報酬率</div><div class="v g" id="pRoE">0%<small id="pRoESub"></small></div></div>
+    </div>
+    <div class="note" id="fxNote"></div>
+  </section>
+
+  <!-- ===== Block 4: Stress ===== -->
+  <section class="panel">
+    <div class="panel-head"><span class="idx">4</span><h2>壓力測試<span class="en">Stress Test</span></h2><span class="hint">自動讀取上方商品 · 拉跌幅看補倉</span></div>
+
+    <div class="stress-top">
+      <div class="scenario">
+        <h3>情境控制 · 拖曳模擬下跌</h3>
+        <div class="master-row"><span class="ml">全組合同步下跌</span><input type="range" id="masterDcl" min="0" max="60" step="0.5" value="0"><output id="masterOut">0%</output></div>
+        <div class="master-row"><span class="ml" id="fxLabel">融資幣別升值</span><input type="range" id="fxShock" min="0" max="30" step="0.5" value="0"><output id="fxOut">0%</output></div>
+        <div style="font-size:14px;color:var(--ink-soft);line-height:1.6;margin-top:4px">同步桿會覆寫下表各標的跌幅;也可在下表個別微調。融資幣別升值會等比放大美元計價借款。</div>
+      </div>
+      <div class="tol">
+        <h3>同步可承受跌幅 (觸發 Margin Call 前)</h3>
+        <div class="big"><span id="tolPct">0</span><small>%</small></div>
+        <p id="tolNote"></p>
+      </div>
+    </div>
+
+    <table id="tblStress"><thead><tr>
+      <th>抵押標的</th><th class="num">現值 (USD)</th><th class="num">LTV%</th><th style="text-align:center">模擬跌幅</th><th class="num">壓力後抵押值</th><th class="num">單獨觸發門檻</th>
+    </tr></thead><tbody></tbody>
+    <tfoot><tr><td>壓力後總抵押值</td><td class="num" id="sMv">0</td><td></td><td></td><td class="num" id="sTlv">0</td><td></td></tr></tfoot></table>
+
+    <div class="stress-result">
+      <div><div class="l">壓力後總抵押值</div><div class="v" id="rTlv">$0</div></div>
+      <div><div class="l">借款餘額 (含FX)</div><div class="v" id="rLoan">$0</div></div>
+      <div><div class="l">壓力後緩衝</div><div class="v" id="rBuffer">$0</div></div>
+      <div><div class="l">壓力後利用率</div><div class="v" id="rUtil">0%</div></div>
+      <div><div class="l">狀態 / 需補繳</div><div class="v" id="rStatus"><span class="badge safe">安全</span></div></div>
+    </div>
+    <div class="note"><b>判定</b>:緩衝＝壓力後抵押值 − 借款。利用率 ≥ 100% (緩衝 ≤ 0) ＝ <b>Margin Call 補倉</b>;90–100% ＝警戒;需補繳金額＝補回緩衝為零所需追加的抵押/現金。<b>單獨觸發門檻</b>＝在目前緩衝下,僅此標的下跌多少即打穿(其他不動)。</div>
+  </section>
+
+  </div><!-- /editView -->
+
+  <div id="snapView"></div>
+
+  <footer>內部試算演示，實際 LTV、利率、額度與補倉規則以銀行最終核准為準</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const fmt=n=>{const r=Math.round(n);return (r<0?"-":"")+Math.abs(r).toLocaleString("en-US");};
+  const num=v=>{const n=parseFloat(String(v).replace(/[^0-9.\-]/g,""));return isNaN(n)?0:n;};
+  const pct=(n,d=1)=>n.toFixed(d);
+
+  let cols=[], uses=[];
+  let cfg={loans:[{ccy:"CHF",amt:0,rate:1.35,fx:0.895}],custodyRate:0.15,custodyBase:0,ownFunds:null};
+  // fx rates: how many USD per 1 unit of foreign currency (e.g. CHF: 1 CHF = 0.895 USD when USD/CHF=1.118)
+  const CCY_DEFAULTS={CHF:{rate:1.35,fx:0.895},USD:{rate:4.5,fx:1},EUR:{rate:3.0,fx:1.08},JPY:{rate:0.1,fx:0.0067},HKD:{rate:4.5,fx:0.128},SGD:{rate:3.5,fx:0.74}};
+  let stress={fx:0};
+  let RES={};
+  const TYPES=["現金","股票/ETF","投資等級債券","結構性票據","基金","保單現金值","其他"];
+
+  const PRESET_HUGH={
+    cols:[],
+    uses:[],
+    cfg:{loans:[{ccy:"CHF",amt:0,rate:1.35,fx:0.895}],custodyRate:0.15,custodyBase:0,ownFunds:null}
+  };
+  const PRESET_PDF={
+    cols:[],
+    uses:[],
+    cfg:{loans:[{ccy:"CHF",amt:0,rate:1.35,fx:0.895}],custodyRate:0.15,custodyBase:0,ownFunds:null}
+  };
+
+  // ---------- collateral set for stress = pledged collateral pool + re-pledged deployments ----------
+  function pledged(){
+    const arr=[];
+    cols.forEach((r,i)=>arr.push({key:"c"+i,name:r.name||"(資產)",mv:r.mv,ltv:r.ltv,row:r}));
+    uses.forEach((r,i)=>{ if(r.pb) arr.push({key:"u"+i,name:r.name||"(投資)",mv:r.amt,ltv:r.ltv,row:r}); });
+    return arr;
+  }
+  const loanTotal=()=>uses.reduce((s,r)=>s+r.amt,0);
+  const tlvNow=()=>pledged().reduce((s,a)=>s+a.mv*a.ltv/100,0);
+
+  // ---------- render editable tables ----------
+  function colRow(r,i){
+    return `<tr data-i="${i}">
+      <td><input data-f="name" value="${r.name}" placeholder="標的"></td>
+      <td><select data-f="type">${TYPES.map(t=>`<option ${t===r.type?"selected":""}>${t}</option>`).join("")}</select></td>
+      <td class="num"><input class="t-num" data-f="mv" value="${r.mv?r.mv.toLocaleString("en-US"):""}" placeholder="0"></td>
+      <td class="num"><input class="t-pct" data-f="ltv" value="${r.ltv}"></td>
+      <td class="num"><input class="t-pct" data-f="yld" value="${r.yld}"></td>
+      <td class="num out">${fmt(r.mv*r.ltv/100)}</td>
+      <td style="padding:0 9px;vertical-align:middle"><label class="sw" style="display:block"><input type="checkbox" data-f="cust" ${r.cust?"checked":""}><span class="track"></span><span class="knob"></span></label></td>
+      <td><button class="del" data-del="col">×</button></td></tr>`;
+  }
+  function useRow(r,i){
+    const occ=r.pb? r.amt*(1-r.ltv/100):r.amt;
+    const rem=r.amt-occ;
+    return `<tr data-i="${i}">
+      <td><input data-f="name" value="${r.name}" placeholder="用途"></td>
+      <td class="num"><input class="t-num" data-f="amt" value="${r.amt?r.amt.toLocaleString("en-US"):""}" placeholder="0"></td>
+      <td class="num"><div class="pb-wrap"><label class="sw"><input type="checkbox" data-f="pb" ${r.pb?"checked":""}><span class="track"></span><span class="knob"></span></label><input class="t-pct" data-f="ltv" value="${r.ltv}" ${r.pb?"":"disabled"}></div></td>
+      <td class="num"><input class="t-pct" data-f="yld" value="${r.yld}"></td>
+      <td class="num out occ">${fmt(occ)}</td>
+      <td class="num rem" style="color:var(--gold);font-weight:600">${fmt(rem)}</td>
+      <td style="padding:0 9px;vertical-align:middle"><label class="sw" style="display:block"><input type="checkbox" data-f="cust" ${r.cust?"checked":""}><span class="track"></span><span class="knob"></span></label></td>
+      <td><button class="del" data-del="use">×</button></td></tr>`;
+  }
+  function stressRow(a){
+    const sv=a.mv*(1-(a.row.dcl||0)/100);
+    const slv=sv*a.ltv/100;
+    return `<tr data-key="${a.key}">
+      <td>${a.name}</td>
+      <td class="num">${fmt(a.mv)}</td>
+      <td class="num">${a.ltv}</td>
+      <td><div class="srange"><input type="range" min="0" max="60" step="0.5" value="${a.row.dcl||0}" data-dcl="${a.key}"><span class="pv" data-pv="${a.key}">${pct(a.row.dcl||0,1)}%</span></div></td>
+      <td class="num">${fmt(slv)}</td>
+      <td class="num"><span class="thr" data-thr="${a.key}"></span></td></tr>`;
+  }
+
+  function render(){
+    $("#tblCol tbody").innerHTML=cols.map(colRow).join("");
+    $("#tblUse tbody").innerHTML=uses.map(useRow).join("");
+    $("#fundCcy") && ($("#fundCcy").value=cfg.fundCcy);
+    $("#borrowRate") && ($("#borrowRate").value=cfg.borrowRate);
+    $("#custodyRate").value=cfg.custodyRate;
+    $("#ownFunds").value=cfg.ownFunds!=null?cfg.ownFunds.toLocaleString("en-US"):"";
+    renderLoanRows();
+    $("#tblStress tbody").innerHTML=pledged().map(stressRow).join("");
+    calc();
+  }
+
+  // ---------- master calc ----------
+  function calc(){
+    // -- LTV summary --
+    const colMv=cols.reduce((s,r)=>s+r.mv,0);
+    const capacity=cols.reduce((s,r)=>s+r.mv*r.ltv/100,0);
+    const useAmt=uses.reduce((s,r)=>s+r.amt,0);
+    const occupied=uses.reduce((s,r)=>s+(r.pb? r.amt*(1-r.ltv/100):r.amt),0);
+    const free=capacity-occupied;
+    const util=capacity>0?occupied/capacity*100:0;
+    $("#colMv").textContent=fmt(colMv); $("#colCap").textContent=fmt(capacity);
+    $("#useAmt").textContent=fmt(useAmt); $("#useOcc").textContent=fmt(occupied);
+    $("#useRem").textContent=fmt(useAmt-occupied);
+    $("#kCap").textContent=fmt(colMv); $("#kUsed").textContent=fmt(colMv);
+    $("#kFree").textContent=fmt(free); $("#kUtil").textContent=pct(util,1);
+    const fk=$(".kpi.k-free"); fk.classList.toggle("neg",free<0); fk.classList.toggle("pos",free>=0);
+    $("#kFreeSub").textContent=free<0?"超額動用!":"尚可動用";
+    $("#kUtilSub").textContent=util>100?"已超限!":util>85?"接近上限":"建議 ≤ 85%";
+    drawWaterfall(capacity,occupied,free);
+
+    // -- P&L --
+    cfg.custodyRate=num($("#custodyRate").value);
+    const ofRaw=$("#ownFunds").value.trim();
+    cfg.ownFunds= ofRaw==="" ? null : num(ofRaw);
+
+    const incCol=cols.reduce((s,r)=>s+r.mv*r.yld/100,0);
+    const incUse=uses.reduce((s,r)=>s+r.amt*r.yld/100,0);
+    const income=incCol+incUse;
+
+    // multi-currency loan interest
+    const loans = cfg.loans || [];
+    // auto-sync: single loan row defaults to 動用合計, until user edits it manually
+    const usesTotal = uses.reduce((s,r)=>s+r.amt,0);
+    if(loans.length===1 && loans[0].auto!==false){
+      loans[0].amt = usesTotal;
+      const inp=document.querySelector('#loanRows input[data-lf="amt"]');
+      if(inp && document.activeElement!==inp){
+        inp.value = usesTotal?usesTotal.toLocaleString("en-US"):"";
+        const cell=inp.closest("tr")?.querySelector(".lint");
+        if(cell) cell.textContent="$"+fmt(loans[0].amt*loans[0].rate/100);
+      }
+    }
+    const loan = loans.reduce((s,l)=> s + l.amt, 0); // amounts entered in USD
+    $("#kUsed").textContent=fmt(colMv + loan);
+    const interest = loans.reduce((s,l)=> s + l.amt*l.rate/100, 0);
+    // update loan table total
+    const ltEl=$("#loanTotalUsd"); if(ltEl) ltEl.textContent="$"+fmt(loan);
+    // weighted avg borrow rate for spread calc
+    const borrowRate = loan>0 ? interest/loan*100 : 0;
+    const custodyBase = cols.filter(r=>r.cust).reduce((s,r)=>s+r.mv,0)
+                      + uses.filter(r=>r.cust).reduce((s,r)=>s+r.amt,0);
+    const custody=custodyBase*cfg.custodyRate/100;
+    const custEl=$("#custodyBase"); if(custEl) custEl.value=custodyBase?custodyBase.toLocaleString("en-US"):"";
+    const cost=interest+custody;
+    const net=income-cost;
+    // 自備金 = 客戶本來帶入私銀的資產（抵押品總市值），與回押、融資購入無關
+    const ownFunds = cfg.ownFunds!=null ? cfg.ownFunds : colMv;
+    const ofEl=$("#ownFunds");
+    if(ofEl && cfg.ownFunds==null && document.activeElement!==ofEl){
+      ofEl.placeholder = colMv?("自動 = "+colMv.toLocaleString("en-US")):"自動 = 抵押品總市值";
+    }
+    // yielding base for spread
+    const yieldBase=cols.filter(r=>r.yld>0).reduce((s,r)=>s+r.mv,0)+uses.filter(r=>r.yld>0).reduce((s,r)=>s+r.amt,0);
+    const wYield=yieldBase>0?income/yieldBase*100:0;
+    const spread=wYield-borrowRate;
+    const roe=ownFunds>0?net/ownFunds*100:0;
+
+    // P&L table rows
+    let pr="";
+    cols.filter(r=>r.yld>0).forEach(r=>pr+=`<tr><td>收益 · ${r.name||"資產"}</td><td class="num">${fmt(r.mv)}</td><td class="num">${pct(r.yld,2)}</td><td class="num out inc">${fmt(r.mv*r.yld/100)}</td></tr>`);
+    uses.filter(r=>r.yld>0).forEach(r=>pr+=`<tr><td>收益 · ${r.name||"投資"}</td><td class="num">${fmt(r.amt)}</td><td class="num">${pct(r.yld,2)}</td><td class="num out inc">${fmt(r.amt*r.yld/100)}</td></tr>`);
+    pr+=`<tr><td>融資成本 (${loans.map(l=>l.ccy).join("+")||"—"})</td><td class="num">(${fmt(loan)})</td><td class="num">${pct(borrowRate,2)}</td><td class="num out cost">(${fmt(interest)})</td></tr>`;
+    pr+=`<tr><td>保管費</td><td class="num">${fmt(cfg.custodyBase)}</td><td class="num">${pct(cfg.custodyRate,2)}</td><td class="num out cost">(${fmt(custody)})</td></tr>`;
+    pr+=`<tr style="font-weight:700"><td>淨年度回報</td><td class="num"></td><td class="num"></td><td class="num" style="color:var(--maroon);font-family:'Source Serif 4','Noto Serif TC',serif;font-size:18px">${fmt(net)}</td></tr>`;
+    $("#tblPnl tbody").innerHTML=pr;
+
+    $("#pIncome").textContent="$"+fmt(income);
+    $("#pCost").textContent="$"+fmt(cost);
+    $("#pNet").textContent="$"+fmt(net); $("#pNet").className="v "+(net>=0?"m":"r");
+    const pSpEl=$("#pSpread"); if(pSpEl) pSpEl.innerHTML=pct(spread,2)+"%<small id='pSpreadSub'> 加權收益 "+pct(wYield,2)+"% − 加權融資 "+pct(borrowRate,2)+"%</small>";
+    $("#pRoE").innerHTML=pct(roe,2)+"%<small id='pRoESub'> 淨回報 / 自備金 "+fmt(ownFunds)+"</small>";
+
+    const nonUsdLoans = loans.filter(l=>l.ccy!=="USD");
+    const fxN = nonUsdLoans.length>0
+      ? `<b>幣別風險:</b>融資含 ${nonUsdLoans.map(l=>l.ccy).join("、")} 等非美元幣別，若該幣別兌 USD 升值，借款美元等值與利息同步上升，將侵蝕利差與抵押緩衝。建議設匯率對沖門檻。`
+      : `融資與資產同為 USD，無跨幣別匯率風險。`;
+    $("#fxNote").innerHTML=fxN;
+
+    // -- snapshot results bundle (linked view) --
+    RES={
+      cap:capacity, occ:occupied, free:free, util:util, totalMV:colMv,
+      deploys: uses.map(r=>({name:r.name||"動用", occ:(r.pb? r.amt*(1-r.ltv/100):r.amt), pb:r.pb, ltv:r.ltv})),
+      sources: cols.map(r=>({name:r.name||"資產", ltv:r.ltv, lv:r.mv*r.ltv/100})).filter(s=>s.lv>0),
+      income:income, cost:cost, net:net, spread:spread, wYield:wYield, roe:roe, ownFunds:ownFunds,
+      loan:loan, interest:interest, custody:custody, custodyBase:custodyBase, borrowRate:borrowRate, fundCcy:(loans[0]?.ccy||"USD"),
+      uses: JSON.parse(JSON.stringify(uses)),
+      incRows: cols.filter(r=>r.yld>0).map(r=>({name:r.name||"資產",base:r.mv,rate:r.yld,amt:r.mv*r.yld/100}))
+                 .concat(uses.filter(r=>r.yld>0).map(r=>({name:r.name||"投資",base:r.amt,rate:r.yld,amt:r.amt*r.yld/100}))),
+      positions: cols.map(r=>({name:r.name||"資產",amt:r.mv})).concat(uses.map(r=>({name:r.name||"商品",amt:r.amt})))
+                 .filter(p=>p.amt>0).sort((a,b)=>b.amt-a.amt),
+      tlv: tlvNow()
+    };
+    RES.totalInvest = RES.positions.reduce((s,p)=>s+p.amt,0);
+    RES.tol = RES.tlv>0 ? Math.max(0,(1-RES.loan/RES.tlv)*100) : 0;
+    if(document.body.classList.contains("snap")) renderSnapshot();
+
+    // -- Stress --
+    calcStress();
+  }
+
+  function calcStress(){
+    stress.fx=num($("#fxShock").value);
+    const nonUsd=(cfg.loans||[]).filter(l=>l.ccy!=="USD").map(l=>l.ccy).join("/");
+    $("#fxLabel").textContent=nonUsd?nonUsd+" 兌 USD 升值":"融資幣別升值 (USD 無)";
+    $("#fxOut").textContent=pct(stress.fx,1)+"%";
+    $("#masterOut").textContent=pct(num($("#masterDcl").value),1)+"%";
+
+    const set=pledged();
+    const loan=loanTotal();
+    const loanFx=loan*(1+(cfg.fundCcy==="USD"?0:stress.fx/100));
+    const tlv0=tlvNow();
+    const bufNow=tlv0-loan; // current buffer (pre-stress, pre-fx) for single-asset thresholds
+
+    // stressed
+    let sMv=0,sTlv=0;
+    set.forEach(a=>{
+      const sv=a.mv*(1-(a.row.dcl||0)/100);
+      sMv+=sv; sTlv+=sv*a.ltv/100;
+      // update row visuals
+      const slvCell=$(`#tblStress tbody tr[data-key="${a.key}"] td:nth-child(5)`);
+      if(slvCell) slvCell.textContent=fmt(sv*a.ltv/100);
+      // single-asset threshold (others at current price, this one drops d): MC when bufNow - mv*d*ltv <0
+      const denom=a.mv*a.ltv/100;
+      let dstar = denom>0 ? bufNow/denom*100 : Infinity;
+      const thrEl=$(`#tblStress tbody tr[data-key="${a.key}"] [data-thr="${a.key}"]`);
+      if(thrEl){
+        if(bufNow<=0){thrEl.textContent="已補倉";thrEl.className="thr tight";}
+        else if(dstar>=100){thrEl.textContent="跌 100%+";thrEl.className="thr ok";}
+        else {thrEl.textContent="跌 "+pct(dstar,1)+"%";thrEl.className="thr "+(dstar<15?"tight":dstar<30?"mid":"ok");}
+      }
+    });
+    $("#sMv").textContent=fmt(sMv); $("#sTlv").textContent=fmt(sTlv);
+
+    const buffer=sTlv-loanFx;
+    const util=sTlv>0?loanFx/sTlv*100:0;
+    $("#rTlv").textContent="$"+fmt(sTlv);
+    $("#rLoan").textContent="$"+fmt(loanFx);
+    $("#rBuffer").textContent="$"+fmt(buffer); $("#rBuffer").className="v "+(buffer<0?"r":buffer< tlv0*0.05?"a":"g");
+    $("#rUtil").textContent=pct(util,1)+"%"; $("#rUtil").className="v "+(util>=100?"r":util>=90?"a":"g");
+    let badge,topup="";
+    if(util>=100||buffer<0){badge='<span class="badge call">補倉 Margin Call</span>';topup=" · 需補 $"+fmt(loanFx-sTlv);}
+    else if(util>=90){badge='<span class="badge warn">警戒</span>';}
+    else{badge='<span class="badge safe">安全</span>';}
+    $("#rStatus").innerHTML=badge+`<span style="font-size:14.5px;color:var(--ink-soft);font-weight:500">${topup}</span>`;
+
+    // uniform tolerance (all assets drop d uniformly, at current fx): (1-d)*tlv0 = loanFx -> d=1-loanFx/tlv0
+    let tol = tlv0>0 ? (1-loanFx/tlv0)*100 : 0;
+    if(tol<0) tol=0;
+    $("#tolPct").textContent=pct(tol,2);
+    const tolEl=$("#tolPct");
+    tolEl.style.color = tol<5?"var(--red)":tol<12?"var(--amber)":"var(--green)";
+    $("#tolNote").innerHTML = (loanFx>tlv0)
+      ? `目前已處於 <b style="color:var(--red)">補倉狀態</b>(借款 > 抵押值)。`
+      : `總抵押值 $${fmt(tlv0)}、借款 $${fmt(loanFx)}。全組合同步再跌約 <b>${pct(tol,2)}%</b> 即觸發 Margin Call。利用率越高,這條防線越薄。`;
+  }
+
+  // ---------- deployment chart ----------
+  function drawWaterfall(cap, occ, free){
+    const totalMV = cols.reduce((s,r)=>s+r.mv, 0);  // 操作前：客戶總資產市值
+    const usesArr = uses.filter(r => r.amt > 0);
+    const depColors = ["#2e3a4d","#b08833","#3a6e8a","#8a6e34","#2e6b5e","#5a7a9a"];
+
+    const datasets = [
+      { label:"客戶總資產", data:[totalMV, totalMV], backgroundColor:"#2e3a4d", borderRadius:4, borderSkipped:false },
+      ...usesArr.map((r,i)=>({
+        label: r.name,
+        data: [0, r.pb ? r.amt*(1-r.ltv/100) : r.amt],
+        backgroundColor: depColors[i % depColors.length],
+        borderRadius: 4, borderSkipped: false
+      }))
+    ];
+
+    const leg = document.getElementById("deployLegendEdit");
+    if(leg) leg.innerHTML = datasets.map(d=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${d.backgroundColor};display:inline-block;flex:none"></span>${d.label}</span>`).join("");
+
+    const canv = document.getElementById("waterfallChart");
+    if(!canv) return;
+    if(window._wfChart) window._wfChart.destroy();
+    window._wfChart = new Chart(canv, {
+      type:"bar",
+      data:{ labels:["操作前", "操作後"], datasets },
+      options:{
+        indexAxis:"y", responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label: c => c.raw>0 ? " "+c.dataset.label+"：$"+c.raw.toLocaleString("en-US") : null }}},
+        scales:{
+          x:{ stacked:true,
+              ticks:{ callback:v=>"$"+(v/1000000).toFixed(1)+"M", font:{size:12}, color:"#7a6f63", maxTicksLimit:8 },
+              grid:{ color:"rgba(46,58,77,0.10)" },
+              border:{ display:false }
+          },
+          y:{ stacked:true,
+              grid:{ display:false },
+              ticks:{ font:{size:14}, color:"#4a3f33", padding:8 },
+              border:{ display:false }
+          }
+        },
+        layout:{ padding:{ right:16 } }
+      }
+    });
+  }
+
+  // ---------- multi-currency loan rows ----------
+  const CCYS = ["CHF","USD","EUR","JPY","HKD","SGD"];
+  function renderLoanRows(){
+    const tbody = $("#loanRows"); if(!tbody) return;
+    tbody.innerHTML = (cfg.loans||[]).map((l,i)=>`
+      <tr data-li="${i}">
+        <td><select data-lf="ccy" style="font-size:15.5px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:6px;background:var(--field);font-family:inherit">
+          ${CCYS.map(c=>`<option ${c===l.ccy?"selected":""}>${c}</option>`).join("")}
+        </select></td>
+        <td class="num"><input class="t-num" data-lf="amt" value="${l.amt?l.amt.toLocaleString("en-US"):""}" placeholder="0" style="width:120px"></td>
+        <td class="num"><input class="t-num" data-lf="rate" value="${l.rate}" placeholder="0.00" style="width:72px"></td>
+        <td class="num"><input class="t-num" data-lf="fx" value="${l.fx}" placeholder="1.00" style="width:72px"></td>
+        <td class="num lint" style="color:var(--maroon);font-weight:600">$${fmt(l.amt*l.rate/100)}</td>
+        <td><button class="del" data-ldel="${i}">×</button></td>
+      </tr>`).join("");
+    // events
+    tbody.querySelectorAll("select[data-lf]").forEach(el=>el.addEventListener("change",e=>{
+      const i=+e.target.closest("tr").dataset.li;
+      cfg.loans[i].ccy=e.target.value;
+      const def=CCY_DEFAULTS[e.target.value]||{rate:1,fx:1};
+      cfg.loans[i].rate=def.rate; cfg.loans[i].fx=def.fx;
+      renderLoanRows(); calc();
+    }));
+    tbody.querySelectorAll("input[data-lf]").forEach(el=>el.addEventListener("input",e=>{
+      const tr=e.target.closest("tr");
+      const i=+tr.dataset.li, f=e.target.dataset.lf;
+      cfg.loans[i][f]=num(e.target.value);
+      if(f==="amt") cfg.loans[i].auto=false; // manual override stops auto-sync
+      const l=cfg.loans[i];
+      const cell=tr.querySelector(".lint");
+      if(cell) cell.textContent="$"+fmt(l.amt*l.rate/100);
+      calc();
+    }));
+    tbody.querySelectorAll('input[data-lf="amt"]').forEach(el=>el.addEventListener("focusout",e=>{
+      const v=num(e.target.value);
+      e.target.value=v?v.toLocaleString("en-US"):"";
+    }));
+    tbody.querySelectorAll("[data-ldel]").forEach(btn=>btn.addEventListener("click",e=>{
+      cfg.loans.splice(+e.target.dataset.ldel,1); renderLoanRows(); calc();
+    }));
+  }
+  $("#btnAddLoan").addEventListener("click",()=>{
+    cfg.loans.push({ccy:"CHF",amt:0,rate:1.35,fx:0.895});
+    renderLoanRows(); calc();
+  });
+
+  // ---------- bindTable ----------
+  function bindTable(sel,getArr){
+    $(sel).addEventListener("input",e=>{
+      const arr=getArr(),tr=e.target.closest("tr"); if(!tr)return;
+      const i=+tr.dataset.i,f=e.target.dataset.f; if(f==null)return;
+      const r=arr[i]; if(!r)return;
+      if(f==="name"){r.name=e.target.value;return;}
+      if(f==="pb"){r.pb=e.target.checked;render();return;}
+      if(f==="cust"){r.cust=e.target.checked;calc();return;}
+      if(f==="mv"||f==="amt") r[f]=num(e.target.value);
+      else if(f==="ltv") r.ltv=num(e.target.value);
+      else if(f==="yld") r.yld=num(e.target.value);
+      if(f==="mv"||f==="amt"||f==="ltv"){
+        const cell=tr.querySelector(".out");
+        if(cell){
+          if(sel.includes("Col")) cell.textContent=fmt(r.mv*r.ltv/100);
+          else cell.textContent=fmt(r.pb? r.amt*(1-r.ltv/100):r.amt);
+        }
+        if(!sel.includes("Col")){
+          const remCell=tr.querySelector(".rem");
+          if(remCell){ const occ=r.pb? r.amt*(1-r.ltv/100):r.amt; remCell.textContent=fmt(r.amt-occ); }
+        }
+      }
+      calc();
+    });
+    $(sel).addEventListener("focusout",e=>{
+      const f=e.target.dataset.f; if(!f)return;
+      if(f==="mv"||f==="amt"||f==="ltv"||f==="yld"){
+        setTimeout(()=>{
+          const active=document.activeElement;
+          if(active&&(active.closest("#cmOverlay")||active.closest(".case-bar"))) return;
+          render();
+        },0);
+      }
+    });
+    $(sel).addEventListener("change",e=>{ if(e.target.dataset.f==="type"){getArr()[+e.target.closest("tr").dataset.i].type=e.target.value;calc();} });
+    $(sel).addEventListener("click",e=>{ if(!e.target.dataset.del)return; getArr().splice(+e.target.closest("tr").dataset.i,1); render(); });
+  }
+
+  document.querySelectorAll("[data-add]").forEach(b=>b.addEventListener("click",()=>{
+    if(b.dataset.add==="col") cols.push({name:"",type:"股票/ETF",mv:0,ltv:60,yld:0,dcl:0});
+    else uses.push({name:"",amt:0,pb:false,ltv:75,yld:0,dcl:0});
+    render();
+  }));
+  ["custodyRate","ownFunds"].forEach(id=>{
+    $("#"+id).addEventListener("input",calc); $("#"+id).addEventListener("change",calc);
+  });
+
+  // stress sliders (delegated)
+  $("#tblStress").addEventListener("input",e=>{
+    const key=e.target.dataset.dcl; if(!key)return;
+    const a=pledged().find(x=>x.key===key); if(!a)return;
+    a.row.dcl=num(e.target.value);
+    const pv=$(`#tblStress [data-pv="${key}"]`); if(pv) pv.textContent=pct(a.row.dcl,1)+"%";
+    calcStress();
+  });
+  $("#masterDcl").addEventListener("input",e=>{
+    const d=num(e.target.value);
+    pledged().forEach(a=>a.row.dcl=d);
+    document.querySelectorAll("#tblStress input[type=range][data-dcl]").forEach(s=>s.value=d);
+    document.querySelectorAll("#tblStress [data-pv]").forEach(p=>p.textContent=pct(d,1)+"%");
+    calcStress();
+  });
+  $("#fxShock").addEventListener("input",calcStress);
+
+  document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{
+    const p=b.dataset.preset;
+    if(p==="hugh"){cols=JSON.parse(JSON.stringify(PRESET_HUGH.cols));uses=JSON.parse(JSON.stringify(PRESET_HUGH.uses));cfg=JSON.parse(JSON.stringify(PRESET_HUGH.cfg));}
+    else if(p==="pdf"){cols=JSON.parse(JSON.stringify(PRESET_PDF.cols));uses=JSON.parse(JSON.stringify(PRESET_PDF.uses));cfg=JSON.parse(JSON.stringify(PRESET_PDF.cfg));}
+    else{cols=[];uses=[];cfg={loans:[{ccy:"CHF",amt:0,rate:1.35,fx:0.895}],custodyRate:0.15,custodyBase:0,ownFunds:null};}
+    $("#masterDcl").value=0; $("#fxShock").value=0;
+    render();
+  }));
+
+  // ---------- linked snapshot view ----------
+  function renderSnapshot(){
+    const R=RES; if(R.cap==null) return;
+    // ── 資產放大結構倒三角 ──
+    const colTotalMV = R.totalMV || 0;
+    const bufferAmt  = R.free    || 0;
+    const usesData   = (R.uses || uses).filter(r => r.amt > 0);
+
+    const tierColors = ["#2e3a4d","#b08833","#3a6e8a","#8a6e34","#2e6b5e","#5a7a9a"];
+    const dynLayers = [
+      { label:"資產總市值", sub:"Total Asset Value", amt:colTotalMV, pctOf:null, color:"#2e3a4d" },
+      ...usesData.map((r, i) => ({
+        label: r.name || `商品 ${i+1}`,
+        sub:   null,
+        amt:   r.amt,
+        pctOf: colTotalMV,
+        color: tierColors[i % tierColors.length]
+      })),
+    ];
+
+    const colAnnualYield = cols.reduce((s,r)=>s+r.mv*r.yld/100, 0);
+    const annots = dynLayers.map((layer, i) => {
+      if(i === 0) return {
+        line1: `總資產 $${fmt(colTotalMV)}`,
+        line2: `可抵押額度 $${fmt(R.cap||0)}`,
+        line3: colAnnualYield > 0 ? `年化收益 $${fmt(colAnnualYield)}` : null
+      };
+      const r = usesData[i-1];
+      if(!r) return { line1:"", line2:null, line3:null };
+      const ownPart  = r.pb ? r.amt*(1-r.ltv/100) : r.amt;
+      const loanPart = r.pb ? r.amt*r.ltv/100 : 0;
+      const annualYield = r.amt * r.yld / 100;
+      const line2 = r.pb
+        ? `自備 $${fmt(ownPart)}　借入 $${fmt(loanPart)}`
+        : `現金支出 $${fmt(ownPart)}`;
+      const line3 = r.yld > 0 ? `年化收益 $${fmt(annualYield)}　(${pct(r.yld,2)}%)` : null;
+      return { line1:`買入金額 $${fmt(r.amt)}`, line2, line3 };
+    });
+
+    const cx=620, svgW=1280;
+    const topW=700, tipW=120, bandH=100, gap=10, topY0=36;
+    const nL=dynLayers.length;
+    const svgH = topY0 + nL*(bandH+gap) + 20;
+    let bands="", annLines="";
+
+    dynLayers.forEach((layer,i)=>{
+      const wTop = topW - (topW-tipW)*(i/nL);
+      const wBot = topW - (topW-tipW)*((i+1)/nL);
+      const topY = topY0 + i*(bandH+gap);
+      const botY = topY + bandH;
+      const midY = topY + bandH/2;
+      const midW = (wTop+wBot)/2;
+
+      if(i>0) bands+=`<line x1="${cx-wTop/2}" y1="${topY}" x2="${cx+wTop/2}" y2="${topY}" stroke="#fbf8f2" stroke-width="7"/>`;
+      bands+=`<polygon points="${cx-wTop/2},${topY} ${cx+wTop/2},${topY} ${cx+wBot/2},${botY} ${cx-wBot/2},${botY}" fill="${layer.color}"/>`;
+
+      const pctTxt = "";
+      if(midW >= 80){
+        bands+=`<text x="${cx}" y="${midY-16}" text-anchor="middle" fill="#fff" font-family="'Libre Franklin','Noto Sans TC',sans-serif" font-weight="700" font-size="26">${layer.label}</text>`;
+        bands+=`<text x="${cx}" y="${midY+10}"  text-anchor="middle" fill="rgba(255,255,255,.9)" font-family="'Source Serif 4','Noto Serif TC',serif" font-size="31" font-weight="600">$${fmt(layer.amt)}</text>`;
+        if(layer.sub && midW>180) bands+=`<text x="${cx}" y="${midY+34}" text-anchor="middle" fill="rgba(255,255,255,.65)" font-family="'Libre Franklin','Noto Sans TC',sans-serif" font-size="19">${layer.sub}</text>`;
+      } else {
+        const lx = cx + wTop/2 + 16;
+        bands+=`<line x1="${cx+wTop/2}" y1="${midY}" x2="${lx+6}" y2="${midY}" stroke="#cdbfa8" stroke-width="1" stroke-dasharray="3 3"/>`;
+        bands+=`<text x="${lx+10}" y="${midY-5}" font-size="16" font-weight="700" fill="#222a36" font-family="'Libre Franklin','Noto Sans TC',sans-serif">${layer.label}　$${fmt(layer.amt)}</text>`;
+        if(pctTxt) bands+=`<text x="${lx+10}" y="${midY+12}" font-size="13" fill="#7a6f63" font-family="'Libre Franklin','Noto Sans TC',sans-serif">${pctTxt.replace(" | ","")}</text>`;
+      }
+
+      const ann = annots[i];
+      const rightX = cx + wTop/2 + 2;
+      const annX = cx + topW/2 + 30;
+      const hasThree = !!ann.line3;
+      const y1 = hasThree ? midY-22 : midY-10;
+      const y2 = hasThree ? midY+2  : midY+10;
+      const y3 = midY+24;
+      annLines+=`<line x1="${rightX}" y1="${midY}" x2="${annX}" y2="${midY}" stroke="#cdbfa8" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+      if(ann.line1) annLines+=`<text x="${annX+6}" y="${y1}" font-size="23" font-weight="700" fill="#222a36" font-family="'Libre Franklin','Noto Sans TC',sans-serif">${ann.line1}</text>`;
+      if(ann.line2) annLines+=`<text x="${annX+6}" y="${y2}" font-size="19" fill="#7a6f63" font-family="'Libre Franklin','Noto Sans TC',sans-serif">${ann.line2}</text>`;
+      if(ann.line3) annLines+=`<text x="${annX+6}" y="${y3}" font-size="19" fill="#3f7a57" font-family="'Libre Franklin','Noto Sans TC',sans-serif">${ann.line3}</text>`;
+    });
+
+    const svg=`<svg id="snapFunnel" viewBox="0 0 ${svgW} ${Math.round(svgH)}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs></defs>${bands}${annLines}</svg>`;
+
+    // P&L ledger
+    let inc="";
+    (R.incRows||[]).forEach(r=>inc+=`<tr class="inc"><td>${r.name} <span class="meta">$${fmt(r.base)}</span></td><td class="num">${pct(r.rate,2)}%</td><td class="num">+${fmt(r.amt)}</td></tr>`);
+    if(!inc) inc=`<tr class="inc"><td colspan="3" style="color:var(--ink-soft)">尚無收益項目(填入收益率)</td></tr>`;
+    const ledger=`<table>
+      <thead><tr><th>項目 Item</th><th class="num">率</th><th class="num">年度金額 (USD)</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="3">資產收益 Income</td></tr>${inc}
+        <tr class="sub"><td>年度總收益</td><td class="num"></td><td class="num">${fmt(R.income)}</td></tr>
+        <tr class="grp"><td colspan="3">融資成本與費用 Cost</td></tr>
+        <tr class="cost"><td>${R.fundCcy} 借款利息 <span class="meta">$${fmt(R.loan)}</span></td><td class="num">${pct(R.borrowRate,2)}%</td><td class="num">(${fmt(R.interest)})</td></tr>
+        <tr class="cost"><td>保管費 <span class="meta">計費基礎 $${fmt(R.custodyBase)}</span></td><td class="num">${pct(cfg.custodyRate,2)}%</td><td class="num">(${fmt(R.custody)})</td></tr>
+        <tr class="sub"><td>成本與費用合計</td><td class="num"></td><td class="num">(${fmt(R.cost)})</td></tr>
+        <tr class="net"><td>淨年度回報 Net Return</td><td class="num"></td><td class="num">${fmt(R.net)}</td></tr>
+      </tbody></table>`;
+
+    const negBuf=R.free<0;
+    const html=`
+      <div class="snap-actions">
+        <button onclick="window.print()">列印 / 存 PDF</button>
+        <button id="btnExportClient">⬇ 匯出客戶快照 HTML</button>
+      </div>
+      <div class="snap-head">
+        <h1>私銀資產活化總覽</h1>
+        <div class="sub">各商品投入分布 · 損益層 ｜ 與計算頁即時連動</div>
+        <div class="tag">幣別 <b>USD</b><br>融資 <b>${R.fundCcy}</b> @ ${pct(R.borrowRate,2)}%<br>${new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric"})}</div>
+      </div>
+
+      <div class="snap-sec">
+        <div class="snap-sectitle"><span class="n">I</span><h2>資產放大結構</h2><span class="en">Asset Leverage Structure</span></div>
+        <div class="snap-rule"></div>
+        <div class="funnel-wrap">${svg}<div class="fcaption">資產總市值為基礎，透過私行融資逐層放大，展示每項商品的買入金額</div></div>
+        <div class="snap-chips">
+          <div><div class="l">總買入金額</div><div class="v m">$${fmt((R.totalMV||0)+(R.loan||0))}</div></div>
+          <div><div class="l">淨年度回報</div><div class="v gr">$${fmt(R.net||0)}</div></div>
+          <div><div class="l">自備金年化報酬率</div><div class="v g">${pct(R.roe||0,2)}%</div></div>
+        </div>
+        <div class="snap-explain">
+          <p>客戶以市值合計 <b>$${fmt(R.totalMV||0)}</b> 的資產組合押入私人銀行，透過融資額度取得 <b>$${fmt(R.loan||0)}</b> 的借入資金，總買入規模擴大至 <b>$${fmt((R.totalMV||0)+(R.loan||0))}</b>，資金放大倍數約 <b>${pct((R.totalMV||0)>0?((R.totalMV||0)+(R.loan||0))/(R.totalMV||0)*100:100,1)}%</b>。</p>
+          <p>借入資金依序配置於各商品，利用各資產的收益率覆蓋融資成本（${pct(R.borrowRate||0,2)}%），形成正向利差 <b>${pct(R.spread||0,2)}%</b>，年化淨回報 <b>$${fmt(R.net||0)}</b>。</p>
+          <p>自備金年化報酬率 <b>${pct(R.roe||0,2)}%</b>，遠高於單純持有資產的配息收益，體現私行融資的槓桿增值效果。${R.free<0?'<span style="color:var(--red)"> ⚠ 目前已超出核貸額度，請留意補倉風險。</span>':R.free<R.cap*0.15?'<span style="color:var(--gold)"> 緩衝偏低，建議保留至少 15% 額度以應對資產波動。</span>':''}</p>
+        </div>
+      </div>
+
+      <div class="snap-sec">
+        <div class="snap-sectitle"><span class="n">II</span><h2>資金結構</h2><span class="en">Capital Structure</span></div>
+        <div class="snap-rule"></div>
+        <div class="chart-wrap" style="background:#fbf8f2;border:1px solid var(--line);border-radius:14px;padding:20px 18px 16px">
+          <div id="deployLegend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:14.5px;color:var(--ink-soft)"></div>
+          <div style="position:relative;width:100%;height:200px"><canvas id="deployChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="snap-sec">
+        <div class="snap-sectitle"><span class="n">III</span><h2>損益試算</h2><span class="en">P&amp;L</span></div>
+        <div class="snap-rule"></div>
+        <div class="pnl-grid">
+          <div class="ledger">${ledger}</div>
+          <div class="snap-stats">
+            <div class="snap-stat s1"><div class="l">淨年度回報</div><div class="v"><span class="u">$</span>${fmt(R.net)}</div><div class="s">收益 ${fmt(R.income)} − 成本費用 ${fmt(R.cost)}</div></div>
+            <div class="snap-stat s3"><div class="l">自備金年化報酬率</div><div class="v">${pct(R.roe,2)}<span class="u">%</span></div><div class="s">淨回報 ${fmt(R.net)} / 自備金 $${fmt(R.ownFunds)}</div></div>
+          </div>
+        </div>
+        <div class="snap-foot">
+          <b>風險提示:</b>額度利用率 ${pct(R.util,1)}%,${negBuf?'已超出抵押額度':'緩衝僅 $'+fmt(R.free)};全組合同步下跌約 <b>${pct(R.tol,2)}%</b> 即觸發 Margin Call。${R.fundCcy!=="USD"?'融資為 '+R.fundCcy+'、資產多為 USD,'+R.fundCcy+' 升值將同步推升借款美元等值與利息。':''}實際 LTV、利率與補倉規則以銀行最終核准為準。
+        </div>
+      </div>`;
+    $("#snapView").innerHTML=html;
+    const ec=$("#btnExportClient");
+    if(ec) ec.onclick=()=>exportClientHTML(R, svg, ledger, negBuf);
+
+    // ── 資金部署圖 (Chart A) ──
+    (function(){
+      const canv = $("#deployChart"); if(!canv) return;
+      const ownAmt  = R.totalMV || 0;
+      const usesArr = (R.uses||uses).filter(r=>r.amt>0);
+      const depColors = ["#2e3a4d","#b08833","#3a6e8a","#8a6e34","#2e6b5e","#5a7a9a"];
+      const datasets = [
+        { label:"客戶總資產", data:[ownAmt, ownAmt], backgroundColor:"#2e3a4d", borderRadius:4, borderSkipped:false },
+        ...usesArr.map((r,i)=>({
+          label: r.name,
+          data: [0, r.pb ? r.amt*(1-r.ltv/100) : r.amt],
+          backgroundColor: depColors[i % depColors.length],
+          borderRadius: 4, borderSkipped: false
+        }))
+      ];
+      const leg = $("#deployLegend");
+      if(leg){
+        leg.innerHTML = datasets.map(d=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${d.backgroundColor};display:inline-block;flex:none"></span>${d.label}</span>`).join("");
+      }
+      if(window._deployChart) window._deployChart.destroy();
+      window._deployChart = new Chart(canv, {
+        type:"bar",
+        data:{ labels:["操作前", "操作後"], datasets },
+        options:{
+          indexAxis:"y", responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false},
+            tooltip:{ callbacks:{ label: c => c.raw>0 ? " "+c.dataset.label+"：$"+c.raw.toLocaleString("en-US") : null }}},
+          scales:{
+            x:{ stacked:true,
+                ticks:{ callback:v=>"$"+(v/1000000).toFixed(1)+"M", font:{size:12}, color:"#7a6f63", maxTicksLimit:8 },
+                grid:{ color:"rgba(46,58,77,0.10)" },
+                border:{ display:false }
+            },
+            y:{ stacked:true,
+                grid:{ display:false },
+                ticks:{ font:{size:14}, color:"#4a3f33", padding:8 },
+                border:{ display:false }
+            }
+          },
+          layout:{ padding:{ right:16 } }
+        }
+      });
+    })();
+  }
+
+  // ---------- generate standalone client HTML ----------
+  function exportClientHTML(R, svg, ledger, negBuf){
+    const db=cmLoad();
+    const caseName = (currentCaseId && db[currentCaseId]) ? db[currentCaseId].name : "快照";
+    const caseNote = (currentCaseId && db[currentCaseId]) ? (db[currentCaseId].note||"") : "";
+    const dateStr = new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric"});
+    const fmt2=n=>{const r=Math.round(n);return (r<0?"-":"")+Math.abs(r).toLocaleString("en-US");};
+    const pct2=(n,d=1)=>n.toFixed(d);
+
+    const chips=`
+      <div class="snap-chips">
+        <div><div class="l">總買入金額</div><div class="v m">$${fmt2((R.totalMV||0)+(R.loan||0))}</div></div>
+        <div><div class="l">淨年度回報</div><div class="v gr">$${fmt2(R.net||0)}</div></div>
+        <div><div class="l">自備金年化報酬率</div><div class="v g">${pct2(R.roe||0,2)}%</div></div>
+      </div>
+      <div class="snap-explain">
+        <p>本方案以市值合計 <b>$${fmt2(R.totalMV||0)}</b> 的資產組合作為抵押品，經銀行 LTV 折算後取得最高 <b>$${fmt2(R.cap||0)}</b> 的信貸額度（槓桿比率約 <b>${pct2((R.totalMV||0)>0?(R.cap||0)/(R.totalMV||0)*100:0,1)}%</b>）。</p>
+        <p>目前已動用額度 <b>$${fmt2(R.occ||0)}</b>，分兩層部署：第一層用於保單頭期款，第二層配置於固定收益及結構性商品，以借入資金的利差創造超額報酬。</p>
+        <p>扣除所有動用後，剩餘緩衝為 <b>$${fmt2(R.free||0)}</b>，額度利用率 <b>${pct2(R.util||0,1)}%</b>。${R.free<0?'<span style="color:#a8392f"> ⚠ 目前已超出核貸額度，請留意補倉風險。</span>':R.free<R.cap*0.15?'<span style="color:#a3833f"> 緩衝偏低，建議保留至少 15% 額度以應對資產波動。</span>':' 緩衝充足，具備應對市場波動的空間。'}</p>
+      </div>`;
+
+    const stats=`
+      <div class="snap-stats">
+        <div class="snap-stat s1"><div class="l">淨年度回報</div><div class="v"><span class="u">$</span>${fmt2(R.net)}</div><div class="s">收益 ${fmt2(R.income)} − 成本費用 ${fmt2(R.cost)}</div></div>
+        <div class="snap-stat s3"><div class="l">自備金年化報酬率</div><div class="v">${pct2(R.roe,2)}<span class="u">%</span></div><div class="s">淨回報 ${fmt2(R.net)} / 自備金 $${fmt2(R.ownFunds)}</div></div>
+      </div>`;
+
+    const clientHTML = `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資產活化快照 · ${caseName}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#222a36;--ink-soft:#7e8694;--paper:#eef0f2;--paper-2:#fbfbfc;--line:#dde0e4;--line-strong:#c7ccd3;--maroon:#2e3a4d;--maroon-deep:#252f3f;--maroon-soft:#5a6577;--gold:#b08833;--green:#3f7a57;--red:#b3473c;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Libre Franklin','Noto Sans TC',sans-serif;color:var(--ink);background:radial-gradient(120% 80% at 100% 0%,rgba(176,136,51,.09),transparent 60%),radial-gradient(100% 70% at 0% 100%,rgba(46,58,77,.08),transparent 55%),var(--paper);line-height:1.5;padding:32px 20px 60px;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:860px;margin:0 auto}
+.print-btn{display:flex;gap:10px;margin-bottom:22px;justify-content:flex-end}
+.print-btn button{font-family:inherit;font-size:15px;font-weight:500;padding:8px 18px;border-radius:9px;cursor:pointer;border:1.5px solid var(--maroon);background:var(--maroon);color:#fff;transition:.15s}
+.print-btn button:hover{background:var(--maroon-deep)}
+.snap-head{background:linear-gradient(135deg,#fbfbfc,#e6e9ed);color:var(--ink);padding:34px 40px 30px;border-radius:16px;position:relative;overflow:hidden;margin-bottom:30px;border:1px solid var(--line);border-top:2px solid var(--maroon)}
+.snap-head::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border:1px solid rgba(46,58,77,.18);border-radius:50%}
+.snap-head .eyebrow{font-family:'Source Serif 4','Noto Serif TC',serif;letter-spacing:.44em;text-transform:uppercase;font-size:13px;color:var(--maroon);font-weight:600;margin-bottom:7px}
+.snap-head h1{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:32.5px;line-height:1.15}
+.snap-head .sub{font-size:15px;color:var(--ink-soft);margin-top:7px}
+.snap-head .tag{position:absolute;right:30px;bottom:22px;text-align:right;font-size:13px;color:var(--ink-soft);line-height:1.7}
+.snap-head .tag b{color:var(--maroon)}
+.snap-sec{margin-bottom:30px}
+.snap-sectitle{display:flex;align-items:baseline;gap:11px;margin-bottom:5px}
+.snap-sectitle .n{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:29px;font-weight:700;color:var(--maroon-soft);line-height:1}
+.snap-sectitle h2{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:23px}
+.snap-sectitle .en{font-family:'Source Serif 4','Noto Serif TC',serif;letter-spacing:.16em;text-transform:uppercase;font-size:13px;color:var(--ink-soft);margin-left:auto}
+.snap-rule{height:2px;background:linear-gradient(90deg,var(--maroon),transparent);margin:7px 0 20px;border-radius:2px}
+.funnel-wrap{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;padding:14px 10px 6px}
+#snapFunnel{width:100%;height:auto;display:block}
+.fcaption{text-align:center;font-size:18px;color:var(--ink-soft);margin:6px 0 12px}
+.snap-chips{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.snap-chips>div{padding:13px 14px;border-right:1px solid var(--line);text-align:center}
+.snap-chips>div:last-child{border-right:none}
+.snap-chips .l{font-size:13px;color:var(--ink-soft);margin-bottom:5px}
+.snap-chips .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:700;font-size:25px;line-height:1}
+.snap-chips .v.m{color:var(--maroon)} .snap-chips .v.g{color:var(--gold)} .snap-chips .v.gr{color:var(--green)}
+.pnl-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+.ledger{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ledger table{width:100%;border-collapse:collapse;font-size:15.5px}
+.ledger th{text-align:left;font-weight:500;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--maroon);padding:11px 16px 7px;border-bottom:1.5px solid var(--line-strong)}
+.ledger th.num,.ledger td.num{text-align:right}
+.ledger td{padding:7px 16px;border-bottom:1px solid var(--line)}
+.ledger .grp td{background:rgba(176,136,51,.10);font-weight:600;font-size:14px;color:var(--maroon)}
+.ledger .inc td.num{color:var(--green);font-weight:600} .ledger .cost td.num{color:var(--red);font-weight:600}
+.ledger .sub td{font-weight:700;border-top:1.5px solid var(--line-strong)} .ledger .sub td.num{font-family:'Source Serif 4','Noto Serif TC',serif}
+.ledger .net td{background:var(--maroon);color:#fff;font-weight:700;font-size:17px} .ledger .net td.num{font-family:'Source Serif 4','Noto Serif TC',serif;font-size:20.5px;color:#fff}
+.ledger .meta{font-size:13px;color:var(--ink-soft)}
+.snap-stats{display:flex;flex-direction:column;gap:13px}
+.snap-stat{background:#fbf8f2;border:1px solid var(--line);border-radius:14px;padding:15px 17px;position:relative;overflow:hidden}
+.snap-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.snap-stat.s1::before{background:var(--maroon)} .snap-stat.s2::before{background:var(--gold)} .snap-stat.s3::before{background:var(--green)}
+.snap-stat .l{font-size:14px;color:var(--ink-soft);margin-bottom:5px}
+.snap-stat .v{font-family:'Source Serif 4','Noto Serif TC',serif;font-weight:900;font-size:33.5px;line-height:1}
+.snap-stat.s1 .v{color:var(--maroon)} .snap-stat.s2 .v{color:var(--gold)} .snap-stat.s3 .v{color:var(--green)}
+.snap-stat .v .u{font-size:17px;font-weight:600;color:var(--ink-soft)} .snap-stat .s{font-size:13px;color:var(--ink-soft);margin-top:5px}
+.snap-foot{margin-top:8px;padding-top:14px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink-soft);line-height:1.7} .snap-foot b{color:var(--maroon)}
+.snap-explain{margin-top:16px;padding:16px 20px;background:#fbf8f2;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:8px}
+.snap-explain p{font-size:16px;color:var(--ink);line-height:1.75;margin:0}
+.snap-explain b{color:#252f3f;font-weight:700}
+footer{margin-top:36px;text-align:center;font-size:13px;color:var(--ink-soft);letter-spacing:.04em;border-top:1px solid var(--line);padding-top:16px}
+@media(max-width:700px){.pnl-grid{grid-template-columns:1fr}.snap-chips{grid-template-columns:repeat(2,1fr)}}
+@media print{.print-btn{display:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="print-btn"><button onclick="window.print()">列印 / 儲存 PDF</button></div>
+  <div class="snap-head">
+    <h1>${caseName}</h1>
+    <div class="sub">${caseNote ? caseNote + ' ｜ ' : ''}私銀資產活化總覽 · 各商品投入分布 · 損益層</div>
+    <div class="tag">幣別 <b>USD</b><br>融資 <b>${R.fundCcy}</b> @ ${pct2(R.borrowRate,2)}%<br>${dateStr}</div>
+  </div>
+
+  <div class="snap-sec">
+    <div class="snap-sectitle"><span class="n">I</span><h2>資產放大結構</h2><span class="en">Asset Leverage Structure</span></div>
+    <div class="snap-rule"></div>
+    <div class="funnel-wrap">${svg}<div class="fcaption">資產總市值為基礎，透過私行融資逐層放大，展示每項商品的買入金額</div></div>
+    ${chips}
+  </div>
+
+  <div class="snap-sec">
+    <div class="snap-sectitle"><span class="n">II</span><h2>損益試算</h2><span class="en">P&amp;L</span></div>
+    <div class="snap-rule"></div>
+    <div class="pnl-grid">
+      <div class="ledger">${ledger}</div>
+      ${stats}
+    </div>
+    <div class="snap-foot">
+      <b>風險提示：</b>額度利用率 ${pct2(R.util,1)}%，${negBuf?'已超出抵押額度':'緩衝僅 $'+fmt2(R.free)}；全組合同步下跌約 <b>${pct2(R.tol,2)}%</b> 即觸發 Margin Call。${R.fundCcy!=="USD"?'融資為 '+R.fundCcy+'、資產多為 USD，'+R.fundCcy+' 升值將同步推升借款美元等值與利息。':''}實際 LTV、利率與補倉規則以銀行最終核准為準。
+    </div>
+  </div>
+
+  <footer>本文件為內部試算演示，不構成任何投資建議或承諾</footer>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([clientHTML], {type:"text/html;charset=utf-8"});
+    const a = document.createElement("a");
+    const safeName = caseName.replace(/[\s\/\\:*?"<>|]/g,"_");
+    a.href = URL.createObjectURL(blob);
+    a.download = `私銀資產活化_${safeName}_${new Date().toISOString().slice(0,10)}.html`;
+    a.click();
+    cmToast("⬇ 客戶快照已下載：" + a.download);
+  }
+
+  function showEdit(){document.body.classList.remove("snap");$("#tabEdit").classList.add("active");$("#tabSnap").classList.remove("active");}
+  function showSnap(){document.body.classList.add("snap");$("#tabSnap").classList.add("active");$("#tabEdit").classList.remove("active");renderSnapshot();window.scrollTo(0,0);}
+  $("#tabEdit").addEventListener("click",showEdit);
+  $("#tabSnap").addEventListener("click",showSnap);
+
+  // ========== 個案管理 ==========
+  const CM_KEY = "worldsun_cases_v1";
+  let currentCaseId = null;
+
+  function cmToast(msg){
+    const t=$("#cmToast"); t.textContent=msg; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2200);
+  }
+
+  function cmLoad(){
+    try{ return JSON.parse(localStorage.getItem(CM_KEY)||"{}"); }
+    catch(e){ return {}; }
+  }
+  function cmSave(db){ localStorage.setItem(CM_KEY, JSON.stringify(db)); }
+
+  function cmSnapshot(){
+    return {
+      cols: JSON.parse(JSON.stringify(cols)),
+      uses: JSON.parse(JSON.stringify(uses)),
+      cfg: JSON.parse(JSON.stringify(cfg))
+    };
+  }
+
+  function cmApply(snap){
+    cols = JSON.parse(JSON.stringify(snap.cols||[]));
+    uses = JSON.parse(JSON.stringify(snap.uses||[]));
+    cfg  = JSON.parse(JSON.stringify(snap.cfg||{}));
+    render();
+  }
+
+  function cmRename(id){
+    const db=cmLoad(); if(!db[id])return;
+    const cur=db[id].name;
+    const nm=prompt("修改個案名稱：",cur);
+    if(nm===null)return;
+    const name=nm.trim();
+    if(!name){alert("名稱不可空白");return;}
+    db[id].name=name;
+    cmSave(db);
+    cmRenderBar();
+    cmToast("✓ 已改名為："+name);
+  }
+
+  function cmRenderBar(){
+    const db = cmLoad();
+    const ids = Object.keys(db).sort((a,b)=>(db[b].savedAt||0)-(db[a].savedAt||0));
+    const list = $("#caseList");
+    const lbl  = $("#caseCurrentLabel");
+    if(!ids.length){
+      list.innerHTML = '<span class="case-empty">尚無儲存個案</span>';
+      lbl.textContent = "目前未載入任何個案 · 所有變更不會自動儲存";
+      return;
+    }
+    list.innerHTML = ids.map(id=>{
+      const c = db[id];
+      const active = id===currentCaseId ? "active" : "";
+      return `<span class="case-chip ${active}" data-cid="${id}" title="點兩下可改名 · ${c.note||c.name}"><span class="cname">${c.name}</span><span class="cedit" data-edit="${id}" title="改名">✎</span><span class="cdel" data-del="${id}" title="刪除">×</span></span>`;
+    }).join("");
+    if(currentCaseId && db[currentCaseId]){
+      const c = db[currentCaseId];
+      const d = new Date(c.savedAt);
+      lbl.textContent = `目前個案：${c.name}${c.note?" · "+c.note:""} ｜ 儲存於 ${d.toLocaleDateString("zh-TW")} ${d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"})}`;
+    } else {
+      lbl.textContent = "目前未載入任何個案 · 點「儲存」即可建立新個案";
+    }
+
+    list.querySelectorAll(".case-chip").forEach(chip=>{
+      chip.addEventListener("click", e=>{
+        if(e.target.classList.contains("cdel")) return;
+        if(e.target.classList.contains("cedit")) return;
+        const id = chip.dataset.cid;
+        const db2 = cmLoad();
+        if(!db2[id]) return;
+        cmApply(db2[id].snap);
+        currentCaseId = id;
+        cmRenderBar();
+        cmToast("已載入：" + db2[id].name);
+      });
+      chip.addEventListener("dblclick", e=>{
+        e.preventDefault();
+        cmRename(chip.dataset.cid);
+      });
+    });
+
+    list.querySelectorAll(".cedit").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        cmRename(btn.dataset.edit);
+      });
+    });
+
+    list.querySelectorAll(".cdel").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        const id = btn.dataset.del;
+        const db2 = cmLoad();
+        if(!db2[id]) return;
+        if(!confirm(`確定刪除個案「${db2[id].name}」？`)) return;
+        delete db2[id];
+        cmSave(db2);
+        if(currentCaseId===id) currentCaseId=null;
+        cmRenderBar();
+        cmToast("已刪除個案");
+      });
+    });
+  }
+
+  function cmFlushInputs(){
+    document.querySelectorAll("#tblCol input[data-f], #tblUse input[data-f]").forEach(inp=>{
+      const f=inp.dataset.f; if(!f) return;
+      const tr=inp.closest("tr"); if(!tr) return;
+      const i=+tr.dataset.i;
+      if(f==="mv"||f==="amt"){ const arr=f==="mv"?cols:uses; if(arr[i]) arr[i][f]=num(inp.value); }
+      else if(f==="ltv"){ const arr=tr.closest("#tblCol")?cols:uses; if(arr[i]) arr[i].ltv=num(inp.value); }
+      else if(f==="yld"){ const arr=tr.closest("#tblCol")?cols:uses; if(arr[i]) arr[i].yld=num(inp.value); }
+    });
+  }
+
+  function cmOpenModal(mode){
+    $("#cmMode").value = mode;
+    const db = cmLoad();
+    if(mode==="update" && currentCaseId && db[currentCaseId]){
+      $("#cmTitle").textContent = "更新個案";
+      $("#cmName").value = db[currentCaseId].name;
+      $("#cmNote").value = db[currentCaseId].note||"";
+    } else {
+      $("#cmTitle").textContent = "儲存新個案";
+      $("#cmName").value = "";
+      $("#cmNote").value = "";
+    }
+    $("#cmOverlay").style.display="flex";
+    setTimeout(()=>$("#cmName").focus(),80);
+  }
+
+  $("#btnSaveCase").addEventListener("click",()=>{
+    cmFlushInputs();
+    const db = cmLoad();
+    if(currentCaseId && db[currentCaseId]){
+      db[currentCaseId] = {
+        name: db[currentCaseId].name,
+        note: db[currentCaseId].note||"",
+        savedAt: Date.now(),
+        snap: cmSnapshot()
+      };
+      cmSave(db);
+      cmRenderBar();
+      cmToast("✓ 已儲存：" + db[currentCaseId].name);
+    } else {
+      cmOpenModal("new");
+    }
+  });
+
+  $("#btnNewCase").addEventListener("click",()=>{
+    if(currentCaseId || cols.some(c=>c.mv>0) || uses.some(u=>u.amt>0)){
+      if(!confirm("開新個案會清空目前畫面的資料（未儲存的變更將遺失）。確定繼續？")) return;
+    }
+    cols=[]; uses=[];
+    cfg={loans:[{ccy:"CHF",amt:0,rate:1.35,fx:0.895}],custodyRate:0.15,custodyBase:0,ownFunds:null};
+    currentCaseId=null;
+    render();
+    cmRenderBar();
+    cmToast("已開啟新個案，填好後點「儲存」");
+  });
+
+  $("#cmCancel").addEventListener("click",()=>{ $("#cmOverlay").style.display="none"; });
+  $("#cmOverlay").addEventListener("input",e=>e.stopPropagation());
+  $("#cmOverlay").addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.tagName!=="TEXTAREA") $("#cmConfirm").click(); });
+  $("#cmOverlay").addEventListener("click",e=>{ if(e.target===$("#cmOverlay")) $("#cmOverlay").style.display="none"; });
+
+  $("#cmConfirm").addEventListener("click",()=>{
+    const name = $("#cmName").value.trim();
+    if(!name){ $("#cmName").focus(); return; }
+    const note = $("#cmNote").value.trim();
+    cmFlushInputs();
+    const db = cmLoad();
+    const mode = $("#cmMode").value;
+    const id = (mode==="update" && currentCaseId) ? currentCaseId : ("c_"+Date.now());
+    db[id] = { name, note, savedAt: Date.now(), snap: cmSnapshot() };
+    cmSave(db);
+    currentCaseId = id;
+    $("#cmOverlay").style.display="none";
+    cmRenderBar();
+    cmToast("✓ 個案已儲存：" + name);
+  });
+
+  $("#btnExportCase").addEventListener("click",()=>{
+    const db = cmLoad();
+    let data, filename;
+    if(currentCaseId && db[currentCaseId]){
+      data = { version:1, cases:{ [currentCaseId]: db[currentCaseId] } };
+      filename = `worldsun_${db[currentCaseId].name.replace(/\s+/g,"_")}.json`;
+    } else {
+      data = { version:1, cases: db };
+      filename = `worldsun_all_cases_${new Date().toISOString().slice(0,10)}.json`;
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    cmToast("⬇ 已匯出：" + filename);
+  });
+
+  $("#btnImportCase").addEventListener("click",()=>$("#importFile").click());
+  $("#importFile").addEventListener("change", e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        const incoming = data.cases||data;
+        const db = cmLoad();
+        let count=0;
+        Object.entries(incoming).forEach(([id,c])=>{
+          if(c.snap && c.name){ db[id]=c; count++; }
+        });
+        cmSave(db);
+        cmRenderBar();
+        cmToast(`✓ 已匯入 ${count} 個個案`);
+      } catch(err){ alert("JSON 格式錯誤，無法匯入"); }
+      e.target.value="";
+    };
+    reader.readAsText(file);
+  });
+
+  cmRenderBar();
+
+  // ========== end 個案管理 ==========
+
+
+  $("#stamp").textContent=new Date().toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric"});
+  cols=JSON.parse(JSON.stringify(PRESET_HUGH.cols));
+  uses=JSON.parse(JSON.stringify(PRESET_HUGH.uses));
+  cfg=JSON.parse(JSON.stringify(PRESET_HUGH.cfg));
+  bindTable("#tblCol",()=>cols);
+  bindTable("#tblUse",()=>uses);
+  render();
+})();
+</script>
+</body>
+</html>
