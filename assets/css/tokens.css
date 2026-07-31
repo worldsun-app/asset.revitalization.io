@@ -1,0 +1,89 @@
+/* ==========================================================================
+   tokens.css — 設計變數：色彩、流體字級、流體間距、圓角、斷點約定
+   --------------------------------------------------------------------------
+   斷點一律 mobile-first，只用 min-width。全站共用這四個值：
+     sm   36rem    (576px)   大手機 / 手機橫向
+     md   48rem    (768px)   平板直向 — 表格從「卡片模式」切回真表格
+     lg   56.25rem (900px)   平板橫向 / 小筆電 — 雙欄版面啟用
+     xl   70rem    (1120px)  桌機 — KPI 展開四欄
+   CSS 變數不能用在 media query 條件裡，所以斷點值是各檔案手寫的字面值；
+   要調整斷點請全域搜尋這四個 rem 值，不要只改一處。
+   --------------------------------------------------------------------------
+   流體級距用 clamp(min, 基準 + vw, max)，在 320px 取 min、1120px 取 max，
+   中間線性內插，因此不會有「跨過斷點才跳一階」的突變。
+   ========================================================================== */
+
+:root {
+  /* ---------- 色彩 ---------- */
+  --ink: #222a36;
+  --ink-soft: #7e8694;
+  --paper: #eef0f2;
+  --paper-2: #fbfbfc;
+  --paper-3: #fbf8f2;          /* 快照區塊底色 */
+  --line: #dde0e4;
+  --line-strong: #c7ccd3;
+  --maroon: #2e3a4d;
+  --maroon-deep: #252f3f;
+  --maroon-soft: #5a6577;
+  --gold: #b08833;
+  --green: #3f7a57;
+  --green-soft: #e6f0e8;
+  --red: #b3473c;
+  --red-soft: #f6e6e3;
+  --amber: #a87f2e;
+  --amber-soft: #f4ecd9;
+  --navy: #2e3a4d;
+  --field: #fbfbfc;
+  --field-focus: #fff;
+  --shadow: 0 1px 2px rgba(34, 42, 54, .06), 0 18px 50px -28px rgba(34, 42, 54, .30);
+  --focus-ring: 0 0 0 3px rgba(46, 58, 77, .18);
+
+  /* ---------- 字體 ---------- */
+  --font-sans: 'Libre Franklin', 'Noto Sans TC', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', 'Noto Serif TC', Georgia, serif;
+
+  /* ---------- 流體字級 ---------- */
+  --fs-2xs:     clamp(0.75rem,    0.725rem  + 0.125vw,  0.8125rem);   /* 12 → 13   */
+  --fs-xs:      clamp(0.8125rem,  0.7875rem + 0.125vw,  0.875rem);    /* 13 → 14   */
+  --fs-sm:      clamp(0.875rem,   0.8375rem + 0.1875vw, 0.96875rem);  /* 14 → 15.5 */
+  --fs-md:      clamp(1rem,       0.9625rem + 0.1875vw, 1.09375rem);  /* 16 → 17.5 表單最小 16px，避免 iOS 聚焦自動放大 */
+  --fs-base:    clamp(1rem,       0.95rem   + 0.25vw,   1.125rem);    /* 16 → 18   */
+  --fs-lg:      clamp(1.125rem,   1.0625rem + 0.3125vw, 1.28125rem);  /* 18 → 20.5 */
+  --fs-xl:      clamp(1.1875rem,  1.0875rem + 0.5vw,    1.4375rem);   /* 19 → 23   panel h2 */
+  --fs-2xl:     clamp(1.625rem,   1.4625rem + 0.8125vw, 2.03125rem);  /* 26 → 32.5 快照 h1 */
+  --fs-3xl:     clamp(1.71875rem, 1.26875rem + 2.25vw,  2.84375rem);  /* 27.5 → 45.5 主標 */
+
+  /* ---------- 流體數字級距（襯線數值） ---------- */
+  --fs-num-sm:  clamp(1.28125rem, 1.13125rem + 0.75vw,   1.65625rem); /* 20.5 → 26.5 */
+  --fs-num:     clamp(1.375rem,   1.2375rem + 0.6875vw,  1.71875rem); /* 22 → 27.5   */
+  --fs-num-md:  clamp(1.625rem,   1.4375rem + 0.9375vw,  2.09375rem); /* 26 → 33.5   */
+  --fs-num-lg:  clamp(1.875rem,   1.55rem   + 1.625vw,   2.6875rem);  /* 30 → 43  KPI */
+  --fs-num-xl:  clamp(2.125rem,   1.7125rem + 2.0625vw,  3.15625rem); /* 34 → 50.5 可承受跌幅 */
+
+  /* ---------- 流體間距 ---------- */
+  --sp-page-x:  clamp(0.875rem, 0.675rem + 1vw,    1.375rem);   /* 14 → 22 */
+  --sp-page-y:  clamp(1.5rem,   1.1rem   + 2vw,    2.5rem);     /* 24 → 40 */
+  --sp-panel-x: clamp(1rem,     0.6rem   + 2vw,    2rem);       /* 16 → 32 */
+  --sp-panel-y: clamp(1.25rem,  1rem     + 1.25vw, 1.875rem);   /* 20 → 30 */
+  --gap:        clamp(0.75rem,  0.6rem   + 0.75vw, 1.125rem);   /* 12 → 18 */
+  --gap-lg:     clamp(1rem,     0.7rem   + 1.5vw,  1.75rem);    /* 16 → 28 */
+
+  /* ---------- 圖表高度 ---------- */
+  --chart-h:    clamp(9rem,  4rem + 22vw, 11.25rem);            /* 144 → 180 */
+  --chart-h-lg: clamp(10rem, 5rem + 22vw, 12.5rem);             /* 160 → 200 */
+
+  /* ---------- 版面 ---------- */
+  --content-max: 70rem;   /* 1120px */
+  --snap-max: 53.75rem;   /* 860px — 匯出快照用 */
+
+  /* ---------- 圓角 ---------- */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r: 11px;
+  --r-md: 14px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* ---------- 觸控 ---------- */
+  --tap: 44px;            /* 觸控裝置最小可點擊尺寸 */
+}

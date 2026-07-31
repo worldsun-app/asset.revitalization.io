@@ -1,0 +1,253 @@
+/* ==========================================================================
+   layout.css — 頁面骨架：容器、頁首、面板、版面網格、頁尾
+   所有 media query 都是 min-width（mobile-first）
+   ========================================================================== */
+
+.wrap {
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   頁首
+   ========================================================================== */
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  border-bottom: 1px solid var(--maroon);
+  padding-bottom: var(--sp-panel-y);
+  margin-bottom: var(--gap-lg);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.brand .eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--maroon-soft);
+}
+
+.brand h1 {
+  font-weight: 600;
+  font-size: var(--fs-3xl);
+  letter-spacing: .01em;
+  line-height: 1.12;
+  color: var(--ink);
+}
+
+.brand h1 small {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--maroon-soft);
+  margin-top: 5px;
+}
+
+.masthead .meta {
+  font-size: var(--fs-xs);
+  line-height: 1.9;
+  letter-spacing: .03em;
+  color: var(--ink-soft);
+}
+
+.masthead .meta b {
+  color: var(--maroon);
+  font-weight: 600;
+}
+
+/* lg 起頁首左右分置 */
+@media (min-width: 56.25rem) {
+  .masthead {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+  }
+
+  .masthead .meta { text-align: right; }
+}
+
+/* ==========================================================================
+   面板
+   ========================================================================== */
+.panel {
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-panel-y) var(--sp-panel-x);
+  margin-bottom: var(--gap-lg);
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: var(--gap);
+}
+
+.panel-head .idx {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  width: 1.625rem;
+  height: 1.625rem;
+  border: 1.5px solid var(--maroon);
+  border-radius: 50%;
+  color: var(--maroon);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.panel-head h2 {
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.panel-head h2 .en {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: var(--fs-2xs);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--maroon-soft);
+}
+
+/* 提示文字在窄螢幕會把標題擠掉，改成整行排在下方 */
+.panel-head .hint {
+  flex-basis: 100%;
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+
+@media (min-width: 56.25rem) {
+  .panel-head .hint {
+    flex-basis: auto;
+    margin-left: auto;
+    text-align: right;
+  }
+}
+
+/* ==========================================================================
+   版面網格
+   minmax(min(100%, X), 1fr) 的 min(100%, …) 是必要的：
+   單純 minmax(X, 1fr) 在容器窄於 X 時會溢出容器。
+   ========================================================================== */
+
+/* KPI：1 欄 → sm 2 欄 → xl 4 欄。四張卡不排 3 欄，會留下一張孤兒。 */
+.kpis {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap-lg);
+}
+
+@media (min-width: 36rem) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 70rem) {
+  .kpis { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 設定欄位群 */
+.cfg {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.375rem), 1fr));
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.cfg label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+  min-width: 0;
+}
+
+/* 壓力測試上半：情境控制 + 可承受跌幅 */
+.stress-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+@media (min-width: 56.25rem) {
+  .stress-top { grid-template-columns: 1.1fr 1fr; }
+}
+
+/* 圖表容器：高度走變數，Chart.js 以 maintainAspectRatio:false 填滿 */
+.chart-box {
+  position: relative;
+  width: 100%;
+  height: var(--chart-h);
+}
+
+.chart-box--lg { height: var(--chart-h-lg); }
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+
+.chart-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chart-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* ==========================================================================
+   說明文字 / 頁尾
+   ========================================================================== */
+.note {
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--ink-soft);
+  border-top: 1px dashed var(--line);
+  margin-top: var(--gap);
+  padding-top: 12px;
+}
+
+.note b { color: var(--maroon); }
+
+footer {
+  margin-top: var(--gap-lg);
+  text-align: center;
+  font-size: var(--fs-xs);
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+}

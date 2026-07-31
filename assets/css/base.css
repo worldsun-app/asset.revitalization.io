@@ -1,0 +1,222 @@
+/* ==========================================================================
+   base.css — reset、文件層、原生元素、表單控件、無障礙
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* 任何子元素都不該把文件推寬；有溢出風險的元素自己開 overflow-x */
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--ink);
+  background:
+    radial-gradient(130% 90% at 100% 0%, rgba(46, 58, 77, .10), transparent 58%),
+    radial-gradient(110% 80% at 0% 100%, rgba(176, 136, 51, .08), transparent 55%),
+    var(--paper);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  /* 有 env() 的裝置（iPhone 瀏海 / 橫向）取安全區與版面留白的較大值 */
+  padding:
+    var(--sp-page-y)
+    max(var(--sp-page-x), env(safe-area-inset-right))
+    calc(var(--sp-page-y) * 2 + env(safe-area-inset-bottom))
+    max(var(--sp-page-x), env(safe-area-inset-left));
+  min-height: 100vh;
+}
+
+/* ---------- 文字 ---------- */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  line-height: 1.15;
+  /* 中文長標題在窄螢幕硬斷字比溢出好 */
+  overflow-wrap: break-word;
+}
+
+b, strong { font-weight: 700; }
+
+code {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--maroon-deep);
+  background: #efe7d8;
+  padding: 1px 6px;
+  border-radius: var(--r-xs);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 表單控件 ---------- */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  /* --fs-md 下限為 1rem：iOS Safari 聚焦時字級 < 16px 會自動縮放整頁 */
+  font-size: var(--fs-md);
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  width: 100%;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--maroon);
+  box-shadow: var(--focus-ring);
+  background: var(--field-focus);
+}
+
+/* 鍵盤操作一律看得到焦點（滑鼠點擊不顯示） */
+:focus-visible {
+  outline: 2px solid var(--maroon);
+  outline-offset: 2px;
+}
+
+select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l4 6 4-6z' fill='%232e3a4d'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  padding-right: 24px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---------- 範圍滑桿 ---------- */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--red));
+  outline: none;
+  /* 手機上讓水平拖曳歸滑桿，不要被頁面捲動搶走 */
+  touch-action: pan-y;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--maroon);
+  border: 2.5px solid var(--paper-2);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(80, 50, 20, .25);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--maroon);
+  border: 2.5px solid var(--paper-2);
+  cursor: pointer;
+}
+
+/* ---------- 工具類 ---------- */
+
+/* 只給螢幕閱讀器的文字（例如純圖示欄的欄名） */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 唯讀欄位：看得到但不可編輯 */
+.field-readonly { pointer-events: none; opacity: .7; }
+.field-readonly input[readonly] { background: var(--paper); cursor: default; }
+
+[hidden] { display: none !important; }
+
+/* ---------- 媒體 ---------- */
+img, svg, canvas {
+  max-width: 100%;
+}
+
+svg { height: auto; }
+
+/* ==========================================================================
+   觸控裝置：把可點擊目標放大到 44px。用 pointer:coarse 而非螢幕寬度判斷，
+   因為觸控筆電（寬螢幕但用手指）同樣需要，而窄視窗的桌機滑鼠不需要。
+   ========================================================================== */
+@media (pointer: coarse) {
+  input[type=range] {
+    /* 滑桿本身只有 10px 高，用透明內距把可觸區撐到 44px。
+       這裡必須改回 content-box，否則 border-box 會把 34px 內距算進
+       10px 的 height 裡，軌道被壓成 0。 */
+    box-sizing: content-box;
+    height: 10px;
+    padding: 17px 0;
+    background-clip: content-box;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  input[type=range]::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  input:not([type=range]),
+  select,
+  button {
+    min-height: var(--tap);
+  }
+}
+
+/* ---------- 減少動態效果 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

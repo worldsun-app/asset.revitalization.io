@@ -1,0 +1,57 @@
+/* ==========================================================================
+   print.css — 以 <link media="print"> 載入
+   結構性的「列印走表格版型」規則寫在 components.css / snapshot.css 的
+   `@media (min-width: 48rem), print` 裡，此檔只負責去掉互動元素與裝飾。
+   ========================================================================== */
+
+@page {
+  margin: 12mm;
+}
+
+html { overflow-x: visible; }
+
+body {
+  background: #fff;
+  padding: 0;
+  font-size: 11pt;
+}
+
+/* 互動元素不印 */
+.viewtabs,
+.case-bar,
+.snap-actions,
+.print-btn,
+.addrow,
+.del,
+.cm-overlay,
+.cm-toast {
+  display: none !important;
+}
+
+.panel,
+.kpi,
+.snap-sec,
+.snap-head,
+.funnel-wrap,
+.ledger,
+.snap-stat {
+  box-shadow: none;
+  break-inside: avoid;
+}
+
+.panel { border-color: var(--line-strong); }
+
+.snap-sectitle,
+.panel-head { break-after: avoid; }
+
+/* 捲動容器在紙上沒有意義 */
+.table-scroll,
+.ledger { overflow: visible !important; }
+
+.table-scroll > .data-table,
+.table-scroll > #tblStress,
+.table-scroll > #tblPnl,
+.table-scroll > #tblLoans { min-width: 0; }
+
+/* 讓底色與有意義的色塊照樣印出來 */
+* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
